@@ -1,0 +1,38 @@
+{
+  "name": "@smallprod/models",
+  "version": "1.0.0",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "description": "Model library",
+  "keywords": [
+    "SmallProd",
+    "Model",
+    "Postgres"
+  ],
+  "homepage": "",
+  "bugs": {},
+  "author": "SmallProd Team",
+  "license": "MIT",
+  "private": false,
+  "scripts": {
+    "build": "tsc --project tsconfig.json",
+    "run": "node dist/index.js"
+  },
+  "devDependencies": {
+    "@types/pg": "^7.11.2",
+    "prettier": "^1.19.1",
+    "ts-loader": "^6.2.1",
+    "tslint": "^5.20.1",
+    "tslint-config-airbnb": "^5.11.2",
+    "tslint-config-prettier": "^1.18.0",
+    "tslint-plugin-prettier": "^2.0.1",
+    "typescript": "^3.7.3"
+  },
+  "dependencies": {
+    "pg": "^7.14.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ApierBySmallProd/NodeModels.git"
+  }
+}
