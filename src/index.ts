@@ -26,3 +26,5 @@ export {
   Table,
 } from './entities/entity';
 export { default as DbManager } from './dbs/dbmanager';
+export { default as MigrationManager } from './migration/migration.manager';
+export { default as Migration } from './migration/migration';

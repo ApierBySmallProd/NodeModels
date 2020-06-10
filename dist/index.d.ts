@@ -19,3 +19,5 @@ declare const _default: {
 export default _default;
 export { default as Entity, Id, NonPersistent, PrimaryKey, Table, } from './entities/entity';
 export { default as DbManager } from './dbs/dbmanager';
+export { default as MigrationManager } from './migration/migration.manager';
+export { default as Migration } from './migration/migration';

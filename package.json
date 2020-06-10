@@ -1,6 +1,6 @@
 {
     "name": "@smallprod/models",
-    "version": "3.1.0",
+    "version": "4.0.0",
     "main": "./dist/index.js",
     "types": "./dist/index.d.ts",
     "description": "Model library",
@@ -20,8 +20,8 @@
     "scripts": {
         "build": "tsc --project tsconfig.json",
         "run": "node dist/index.js",
-        "db:migrate": "node src/migration/exemple/index.js migrate",
-        "db:reset": "node src/migration/exemple/index.js reset"
+        "db:migrate": "node exemples/migration.js migrate",
+        "db:reset": "node exemples/migration.js reset"
     },
     "devDependencies": {
         "@smallprod/models": "file:./dist",

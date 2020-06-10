@@ -12,12 +12,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const dbmanager_1 = __importDefault(require("../dbs/dbmanager"));
 const migration_1 = __importDefault(require("./migration"));
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
 class MigrationManager {
     constructor(config) {
-        this.migrate = (targetMigration) => __awaiter(this, void 0, void 0, function* () {
+        this.migrate = (targetMigration, dbName) => __awaiter(this, void 0, void 0, function* () {
             const res = fs_1.default.readdirSync(this.config.migrationPath);
             const migration = new migration_1.default();
             res.sort();
@@ -28,9 +29,13 @@ class MigrationManager {
                     migrationRequired.up(migration);
                 }
             });
-            yield migration.execute(this.config.database);
+            const model = dbmanager_1.default.get().get(dbName);
+            if (!model) {
+                throw new Error('Database not found');
+            }
+            yield migration.execute(model);
         });
-        this.reset = (targetMigration) => __awaiter(this, void 0, void 0, function* () {
+        this.reset = (targetMigration, dbName) => __awaiter(this, void 0, void 0, function* () {
             const res = fs_1.default.readdirSync(this.config.migrationPath);
             const migration = new migration_1.default();
             res.sort();
@@ -41,7 +46,11 @@ class MigrationManager {
                     migrationRequired.down(migration);
                 }
             });
-            yield migration.execute(this.config.database);
+            const model = dbmanager_1.default.get().get(dbName);
+            if (!model) {
+                throw new Error('Database not found');
+            }
+            yield migration.execute(model);
         });
         this.config = config;
     }

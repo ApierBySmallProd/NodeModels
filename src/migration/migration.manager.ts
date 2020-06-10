@@ -1,11 +1,10 @@
-import GlobalModel from '../dbs/global/global.db';
+import DbManager from '../dbs/dbmanager';
 import Migration from './migration';
 import fs from 'fs';
 import path from 'path';
 
 export interface Config {
   migrationPath: string;
-  database: GlobalModel;
 }
 
 export default class MigrationManager {
@@ -19,7 +18,7 @@ export default class MigrationManager {
    * Make all migrations or given targetMigration
    * (call the up function of every migration)
    */
-  public migrate = async (targetMigration?: string) => {
+  public migrate = async (targetMigration?: string, dbName?: string) => {
     const res = fs.readdirSync(this.config.migrationPath);
     const migration = new Migration();
     res.sort();
@@ -33,14 +32,18 @@ export default class MigrationManager {
         migrationRequired.up(migration);
       }
     });
-    await migration.execute(this.config.database);
+    const model = DbManager.get().get(dbName);
+    if (!model) {
+      throw new Error('Database not found');
+    }
+    await migration.execute(model);
   };
 
   /**
    * Reset all migrations or given targetMigration
    * (call the down function of every migrations)
    */
-  public reset = async (targetMigration?: string) => {
+  public reset = async (targetMigration?: string, dbName?: string) => {
     const res = fs.readdirSync(this.config.migrationPath);
     const migration = new Migration();
     res.sort();
@@ -54,6 +57,10 @@ export default class MigrationManager {
         migrationRequired.down(migration);
       }
     });
-    await migration.execute(this.config.database);
+    const model = DbManager.get().get(dbName);
+    if (!model) {
+      throw new Error('Database not found');
+    }
+    await migration.execute(model);
   };
 }

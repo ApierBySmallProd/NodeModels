@@ -29,3 +29,7 @@ exports.PrimaryKey = entity_2.PrimaryKey;
 exports.Table = entity_2.Table;
 var dbmanager_2 = require("./dbs/dbmanager");
 exports.DbManager = dbmanager_2.default;
+var migration_manager_2 = require("./migration/migration.manager");
+exports.MigrationManager = migration_manager_2.default;
+var migration_2 = require("./migration/migration");
+exports.Migration = migration_2.default;

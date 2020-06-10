@@ -1,21 +1,22 @@
-const MigrationManager = require('../../../dist/migration/migrate.js').default;
-const MariaModel = require('../../../dist/dbs/exemples/maria.ex.js').default;
+const MigrationManager = require('@smallprod/models').MigrationManager;
+const DbManager = require('@smallprod/models').DbManager;
 
-const model = MariaModel.GetModel();
 const command = process.argv[2];
 const targetMigration = process.argv[3];
 
 (async() => {
-    await model.setPool({
-        user: 'make_admin',
-        host: 'localhost',
-        database: 'make_db',
-        password: 'secret',
-        port: 3306,
-    });
+    const dbManager = DbManager.get();
+    await dbManager.add(
+        'mariadb',
+        'localhost',
+        3306,
+        'make_admin',
+        'secret',
+        'make_db',
+    );
+
     const manager = new MigrationManager({
         migrationPath: './migrationexemple',
-        database: model,
     });
     switch (command) {
         case 'migrate':
