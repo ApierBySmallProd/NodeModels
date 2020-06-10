@@ -11,7 +11,8 @@
     "moduleResolution": "node",
     "preserveConstEnums": true,
     "allowJs": false,
-    "strictNullChecks": true
+    "strictNullChecks": true,
+    "experimentalDecorators": true
   },
   "include": ["./src/**/*"],
   "exclude": ["./node_modules/**/*.*"]

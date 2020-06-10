@@ -4,44 +4,62 @@ import {
   SortAttribute,
   WhereAttribute,
   WhereKeyWord,
+  WhereOperator,
 } from '../../entities/querys/query';
-import { Pool, PoolClient, PoolConfig, QueryResult } from 'pg';
 
 import GlobalModel from './global.db';
+import mysql from 'mysql';
 
-const getPool = async (
-  config: PoolConfig,
-  quitOnFail = false,
-): Promise<PoolClient | null> => {
-  return new Promise(async (resolve, reject) => {
-    const pool = new Pool(config);
-    pool.on('error', (err) => {
-      if (GlobalPostgreModel.debug) {
-        console.error('Unexpected error on postgres database');
-        console.error(err);
-      }
-      if (quitOnFail) {
-        process.exit(-1);
-      } else {
+const getPool = async (config: mysql.PoolConfig): Promise<mysql.Pool> => {
+  return new Promise((resolve, reject) => {
+    const pool = mysql.createPool(config);
+    pool.getConnection((err, connection) => {
+      if (err) {
         reject(err);
+      } else {
+        connection.release();
+        resolve(pool);
       }
     });
-    const client = await pool.connect();
-    resolve(client);
   });
 };
 
-export default class GlobalPostgreModel extends GlobalModel {
-  protected pool: PoolClient | null = null;
+export default class GlobalMariaModel extends GlobalModel {
+  protected pool: mysql.Pool | null = null;
+
+  public query = async (query: string, params?: string[]): Promise<any> => {
+    return new Promise((resolve) => {
+      if (!this.pool) {
+        if (GlobalMariaModel.debug) console.error('No pool');
+        return resolve(null);
+      }
+      this.pool.getConnection((err, connection) => {
+        if (err) {
+          if (GlobalMariaModel.debug) console.error(err);
+          return resolve(null);
+        }
+        connection.query(query, params, (error, results, fields) => {
+          connection.release();
+          if (error) {
+            if (GlobalMariaModel.debug) console.error(error);
+            return resolve(null);
+          }
+          resolve(results);
+        });
+      });
+    });
+  };
 
   public insert = async (tableName: string, attributes: Attribute[]) => {
     const columns = attributes.map((a) => a.column).join(', ');
-    const params = attributes.map((a, index) => `$${index + 1}`).join(', ');
-    const query = `INSERT INTO ${tableName} (${columns}) VALUES (${params}) RETURNING *`;
-    return await this.query(
-      query,
-      attributes.map((a) => a.value),
-    );
+    const params = attributes.map((a, index) => `?`).join(', ');
+    const query = `INSERT INTO ${tableName} (${columns}) VALUES (${params})`;
+    return (
+      await this.query(
+        query,
+        attributes.map((a) => a.value),
+      )
+    )?.insertId;
   };
 
   public select = async (
@@ -78,7 +96,7 @@ export default class GlobalPostgreModel extends GlobalModel {
         query,
         attributes.map((a) => a.value).concat(wheres.map((w) => w.value)),
       )
-    )?.rowCount;
+    )?.affectedRows;
   };
 
   public delete = async (tableName: string, wheres: Attribute[]) => {
@@ -86,33 +104,21 @@ export default class GlobalPostgreModel extends GlobalModel {
     const query = `DELETE FROM ${tableName} ${
       wheres.length ? `WHERE ${where}` : ''
     }`;
-    return (
-      await this.query(
-        query,
-        wheres.map((w) => w.value),
-      )
-    )?.rowCount;
+    return await this.query(
+      query,
+      wheres.map((w) => w.value),
+    );
   };
 
-  public query = async (
-    query: string,
-    params?: string[],
-  ): Promise<QueryResult | null> => {
-    if (!this.pool) return null;
+  public setPool = async (config: mysql.PoolConfig) => {
     try {
-      return await this.pool.query(query, params);
-    } catch (err) {
-      if (GlobalPostgreModel.debug) {
-        console.error(err);
+      const p = await getPool(config);
+      if (p) {
+        this.pool = p;
       }
-      return null;
-    }
-  };
-
-  public setPool = async (config: PoolConfig) => {
-    const p = await getPool(config);
-    if (p) {
-      this.pool = p;
+    } catch (err) {
+      console.error('Cannot connect to database');
+      console.error(err);
     }
   };
 
