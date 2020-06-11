@@ -1,12 +1,10 @@
 import MigrationType from './migrationtype';
 
 export default class SeedTable extends MigrationType {
-  private tableName: string;
   private rows: SeedRow[] = [];
   private clear = false;
   constructor(tableName: string) {
-    super();
-    this.tableName = tableName;
+    super(tableName, 'seed');
   }
 
   public addRow = () => {

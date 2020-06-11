@@ -2,25 +2,34 @@
 /* There are some warnings becouse you must enable decorators in your tsconfig file */
 
 import {
-  Entity,
+  AllowNull,
+  AutoIncrement,
+  PrimaryKey,
+  Unique,
+} from './decorators/property';
+import {
+  AutoCreateNUpdate,
   Id,
   NonPersistent,
-  PrimaryKey,
   Table,
-} from '@smallprod/models';
+} from './decorators/other';
+import { BigInt, Date, Varchar } from './decorators/fieldtype';
+
+import Entity from './entity';
 
 @Table('user') // This is the table name in which are stored our users
 @AutoCreateNUpdate()
 export default class UserEntity extends Entity {
   @Id()
   @PrimaryKey()
-  @Int()
+  @AutoIncrement()
+  @BigInt()
   private id = -1; // This attribute is a primary key and is treated has the id for findById(), delete() and update()
-  @String(50)
+  @Varchar(50)
   private firstname: string;
-  @String(50)
+  @Varchar(50)
   private lastname: string;
-  @String(50)
+  @Varchar(50)
   @Unique()
   private email: string;
   @Date()

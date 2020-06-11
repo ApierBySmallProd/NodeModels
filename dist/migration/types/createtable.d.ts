@@ -1,16 +1,20 @@
+import AlterTable from './altertable';
 import MigrationType from './migrationtype';
 export default class CreateTable extends MigrationType {
-    name: string;
     fields: Field[];
-    constructor(name: string);
+    constructor(tableName: string);
     addField: (name: string, type: FieldType) => Field;
     formatQuery: () => {
         query: string[];
         constraints: string[];
     };
+    applyMigration: (migration: MigrationType) => void;
+    compareSchema: (schema: CreateTable) => AlterTable | CreateTable | null;
+    generateMigrationFile: (name: string) => string;
+    getName: () => string;
 }
 export declare class Field {
-    private name;
+    name: string;
     private type;
     private null;
     private len;
@@ -21,6 +25,7 @@ export declare class Field {
     private defaultValue;
     private checkValue;
     constructor(name: string, type: FieldType);
+    setType: (type: FieldType) => this;
     allowNull: () => this;
     length: (len: number) => this;
     autoIncrement: () => this;
@@ -39,7 +44,10 @@ export declare class Field {
         primary: boolean;
     };
     formatField: () => string;
+    equal: (field: Field) => boolean;
     formatConstraint: (tableName: string) => string[];
+    generateMigrationFile: () => string;
+    private defaultValueEquals;
 }
 export interface ForeignKey {
     table: string;

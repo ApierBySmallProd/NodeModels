@@ -1,11 +1,10 @@
+import AlterTable from './altertable';
 import MigrationType from './migrationtype';
 
 export default class CreateTable extends MigrationType {
-  public name: string;
   public fields: Field[] = [];
-  constructor(name: string) {
-    super();
-    this.name = name;
+  constructor(tableName: string) {
+    super(tableName, 'createtable');
   }
 
   public addField = (name: string, type: FieldType) => {
@@ -20,19 +19,78 @@ export default class CreateTable extends MigrationType {
     let fieldsConstraints: string[] = [];
     this.fields.forEach((cur) => {
       fieldsConstraints = fieldsConstraints.concat(
-        cur.formatConstraint(this.name),
+        cur.formatConstraint(this.tableName),
       );
     });
-    const query = [`CREATE TABLE ${this.name} (${fieldsString})`];
+    const query = [`CREATE TABLE ${this.tableName} (${fieldsString})`];
     return {
       query,
       constraints: fieldsConstraints,
     };
   };
+
+  public applyMigration = (migration: MigrationType) => {
+    if (migration.type === 'droptable') {
+      this.fields = [];
+    } else if (migration.type === 'createtable') {
+      const mig = migration as CreateTable;
+      this.fields = mig.fields;
+    } else if (migration.type === 'altertable') {
+      const mig = migration as AlterTable;
+      mig.removedFields.forEach((f) => {
+        this.fields = this.fields.filter((fi) => fi.name !== f);
+      });
+      mig.addedFields.forEach((f) => {
+        this.fields.push(f);
+      });
+    }
+  };
+
+  public compareSchema = (schema: CreateTable) => {
+    if (!this.fields.length) {
+      return schema;
+    }
+    const migration = new AlterTable(this.tableName);
+    const fieldNames: string[] = [];
+    schema.fields.forEach((field) => {
+      const curField = this.fields.find((f) => f.name === field.name);
+      if (curField) {
+        if (!curField.equal(field)) {
+          migration.removeField(field.name);
+          migration.addedFields.push(field);
+        }
+      } else {
+        migration.addedFields.push(field);
+      }
+      fieldNames.push(field.name);
+    });
+    const toRemove = this.fields.filter((f) => !fieldNames.includes(f.name));
+    toRemove.forEach((f) => {
+      migration.removeField(f.name);
+    });
+    if (!migration.addedFields.length && !migration.removedFields.length)
+      return null;
+    return migration;
+  };
+
+  public generateMigrationFile = (name: string) => {
+    let file = `const Migration = require('@smallprod/models').Migration;\n\n /**\n *\n * @param {Migration} migration\n */\nconst up = (migration) => {\n    const newTable = migration.createTable('${this.tableName}');\n\n`;
+    this.fields.forEach((field) => {
+      file = `${file}   newTable${field.generateMigrationFile()};\n`;
+    });
+    file = `${file}};\n\n`;
+    file = `${file}/*\n * @param {Migration} migration\n */\nconst down = (migration) => {\n    migration.dropTable('${this.tableName}');\n};\n\n`;
+    file = `${file}module.exports = {\n   name: '${this.getName()}-${name}',\n    up,\n   down,\n};`;
+    return file;
+  };
+
+  public getName = () => {
+    return `create-table-${this.tableName.toLowerCase()}`;
+  };
 }
 
 export class Field {
-  private name: string;
+  public name: string;
   private type: FieldType;
   private null = false;
   private len = 0;
@@ -46,6 +104,11 @@ export class Field {
     this.name = name;
     this.type = type;
   }
+
+  public setType = (type: FieldType) => {
+    this.type = type;
+    return this;
+  };
 
   public allowNull = () => {
     this.null = true;
@@ -113,6 +176,20 @@ export class Field {
     }${this.checkValue ? ` CHECK (${this.name}${this.checkValue})` : ''}`;
   };
 
+  public equal = (field: Field) => {
+    return (
+      this.name === field.name &&
+      this.null === field.null &&
+      field.type === this.type &&
+      this.len === field.len &&
+      field.ai === this.ai &&
+      field.primaryKey === this.primaryKey &&
+      field.mustBeUnique === this.mustBeUnique &&
+      field.checkValue === this.checkValue &&
+      this.defaultValueEquals(field)
+    );
+  };
+
   public formatConstraint = (tableName: string) => {
     const constraints = [];
     // Maybe put this again later
@@ -133,6 +210,32 @@ export class Field {
       );
     }
     return constraints;
+  };
+
+  public generateMigrationFile = (): string => {
+    return `.addField('${this.name}', '${this.type}')${
+      this.ai ? '.autoIncrement()' : ''
+    }${this.checkValue ? `.check('${this.checkValue}')` : ''}${
+      this.defaultValue
+        ? `.default('${this.defaultValue.value}', ${this.defaultValue.isSystem})`
+        : ''
+    }${
+      this.foreignKey
+        ? `.foreign('${this.foreignKey.table}', '${this.foreignKey.column}')`
+        : ''
+    }${this.len ? `.length(${this.len})` : ''}${
+      this.mustBeUnique ? '.unique()' : ''
+    }${this.null ? '.allowNull()' : ''}${this.primaryKey ? '.primary()' : ''}`;
+  };
+
+  private defaultValueEquals = (field: Field) => {
+    if (!this.defaultValue || !field.defaultValue) {
+      return this.defaultValue === field.defaultValue;
+    }
+    return (
+      this.defaultValue.isSystem === field.defaultValue.isSystem &&
+      this.defaultValue.value === field.defaultValue.value
+    );
   };
 }
 

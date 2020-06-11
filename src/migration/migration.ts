@@ -50,6 +50,12 @@ export default class Migration {
     return seedTableMigration;
   };
 
+  public findByTableName = (tableName: string) => {
+    return this.migrations.filter(
+      (m) => m.tableName === tableName && m.type !== 'seed',
+    );
+  };
+
   public execute = async (db: GlobalModel) => {
     if (!(await db.startTransaction())) {
       console.error('Transaction cannot be started');

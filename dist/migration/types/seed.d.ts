@@ -1,6 +1,5 @@
 import MigrationType from './migrationtype';
 export default class SeedTable extends MigrationType {
-    private tableName;
     private rows;
     private clear;
     constructor(tableName: string);

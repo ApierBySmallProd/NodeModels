@@ -6,7 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const migrationtype_1 = __importDefault(require("./migrationtype"));
 class SeedTable extends migrationtype_1.default {
     constructor(tableName) {
-        super();
+        super(tableName, 'seed');
         this.rows = [];
         this.clear = false;
         this.addRow = () => {
@@ -26,7 +26,6 @@ class SeedTable extends migrationtype_1.default {
                 seeds,
             };
         };
-        this.tableName = tableName;
     }
 }
 exports.default = SeedTable;

@@ -1,15 +1,12 @@
 import MigrationType from './migrationtype';
 
 export default class DropTable extends MigrationType {
-  private name: string;
-
-  constructor(name: string) {
-    super();
-    this.name = name;
+  constructor(tableName: string) {
+    super(tableName, 'droptable');
   }
 
   public formatQuery = () => {
-    const query = [`DROP TABLE ${this.name}`];
+    const query = [`DROP TABLE ${this.tableName}`];
     return {
       query,
     };

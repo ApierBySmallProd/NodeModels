@@ -22,8 +22,9 @@ class DbManager {
         this.config = defaultConfig;
         this.dbs = [];
         this.setConfig = (config) => {
-            this.config = Object.assign(Object.assign({}, config), this.config);
+            this.config = Object.assign(Object.assign({}, this.config), config);
         };
+        this.getConfig = () => this.config;
         this.add = (sgbd, host, port, user, password, database, name = '', debug = false) => __awaiter(this, void 0, void 0, function* () {
             switch (sgbd) {
                 case 'mariadb': {

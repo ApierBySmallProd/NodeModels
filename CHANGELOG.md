@@ -1,5 +1,49 @@
 # Changelog
 
+## V4.2.0
+
+### ADD
+
+- Auto create and update from entities
+  - Decorators
+    - @AutoCreateNUpdate for Entity classes
+    - Field types
+      - @TinyInt
+      - @Bool
+      - @SmallInt
+      - @MediumInt
+      - @Int
+      - @BigInt
+      - @Decimal
+      - @Float
+      - @Double
+      - @Bit
+      - @Date
+      - @Time
+      - @DateTime
+      - @Timestamp
+      - @Year
+      - @Char
+      - @Varchar(size)
+      - @Binary
+      - @VarBinary
+      - @TinyBlob
+      - @Blob
+      - @MediumBlob
+      - @LongBlob
+      - @TinyText
+      - @Text
+      - @LongText
+    - Field property
+      - @Unique
+      - @AllowNull
+      - @AutoIncrement
+      - @PrimaryKey
+      - @Default(value, isSystem)
+      - @Check(value)
+
+---
+
 ## V4.1.0
 
 ### ADD

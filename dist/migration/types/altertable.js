@@ -7,7 +7,7 @@ const createtable_1 = require("./createtable");
 const migrationtype_1 = __importDefault(require("./migrationtype"));
 class AlterTable extends migrationtype_1.default {
     constructor(tableName) {
-        super();
+        super(tableName, 'altertable');
         this.addedFields = [];
         this.removedFields = [];
         this.addField = (fieldName, fieldType) => {
@@ -25,7 +25,22 @@ class AlterTable extends migrationtype_1.default {
                 query: [...toRemove, ...toAdd],
             };
         };
-        this.tableName = tableName;
+        this.generateMigrationFile = (name) => {
+            let file = `const Migration = require('@smallprod/models').Migration;\n\n /**\n *\n * @param {Migration} migration\n */\nconst up = (migration) => {\n    const alter = migration.alterTable('${this.tableName}');\n\n`;
+            this.removedFields.forEach((field) => {
+                file = `${file}   alter.removeField('${field}');\n`;
+            });
+            this.addedFields.forEach((field) => {
+                file = `${file}   alter${field.generateMigrationFile()};\n`;
+            });
+            file = `${file}};\n\n`;
+            file = `${file}/*\n * @param {Migration} migration\n */\nconst down = (migration) => {\n    migration.dropTable('${this.tableName}');\n};\n\n`;
+            file = `${file}module.exports = {\n   name: '${this.getName()}-${name}',\n    up,\n   down,\n};`;
+            return file;
+        };
+        this.getName = () => {
+            return `alter-table-${this.tableName.toLowerCase()}`;
+        };
     }
 }
 exports.default = AlterTable;

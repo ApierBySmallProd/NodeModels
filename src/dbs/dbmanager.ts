@@ -26,8 +26,10 @@ export default class DbManager {
   private constructor() {}
 
   public setConfig = (config: Config) => {
-    this.config = { ...config, ...this.config };
+    this.config = { ...this.config, ...config };
   };
+
+  public getConfig = () => this.config;
 
   public add = async (
     sgbd: Sgbd,

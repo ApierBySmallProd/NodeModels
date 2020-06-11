@@ -10,6 +10,7 @@ export default class DbManager {
     private dbs;
     private constructor();
     setConfig: (config: Config) => void;
+    getConfig: () => Config;
     add: (sgbd: Sgbd, host: string, port: number, user: string, password: string, database: string, name?: string, debug?: boolean) => Promise<void>;
     get: (name?: string | null) => GlobalModel | null;
 }

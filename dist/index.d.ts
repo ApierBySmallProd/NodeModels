@@ -17,7 +17,10 @@ declare const _default: {
     };
 };
 export default _default;
-export { default as Entity, Id, NonPersistent, PrimaryKey, Table, } from './entities/entity';
+export { default as Entity } from './entities/entity';
 export { default as DbManager } from './dbs/dbmanager';
 export { default as MigrationManager } from './migration/migration.manager';
 export { default as Migration } from './migration/migration';
+export { BigInt, Binary, Bit, Blob, Bool, Char, Date, DateTime, Decimal, Double, Float, Int, LongBlob, LongText, MediumBlob, MediumInt, SmallInt, Text, Time, Timestamp, TinyBlob, TinyText, Tinyint, VarBinary, Varchar, Year, } from './entities/decorators/fieldtype';
+export { AutoCreateNUpdate, Id, NonPersistent, Table, } from './entities/decorators/other';
+export { AllowNull, AutoIncrement, Check, Default, PrimaryKey, Unique, } from './entities/decorators/property';

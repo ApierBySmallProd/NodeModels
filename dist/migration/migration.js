@@ -39,6 +39,9 @@ class Migration {
             this.migrations.push(seedTableMigration);
             return seedTableMigration;
         };
+        this.findByTableName = (tableName) => {
+            return this.migrations.filter((m) => m.tableName === tableName && m.type !== 'seed');
+        };
         this.execute = (db) => __awaiter(this, void 0, void 0, function* () {
             if (!(yield db.startTransaction())) {
                 console.error('Transaction cannot be started');

@@ -1,13 +1,20 @@
+import CreateTable, { Field } from '../migration/types/createtable';
+
 import CreateQuery from './querys/create.query';
+import DbManager from '../dbs/dbmanager';
 import DeleteQuery from './querys/delete.query';
 import FindQuery from './querys/find.query';
+import { MigrationManager } from '..';
 import UpdateQuery from './querys/update.query';
 
 export default abstract class Entity {
   public static tableName = '';
   public static nonPersistentColumns: string[] = [];
+  public static columns: Field[] = [];
   public static primaryKeys: string[] = [];
   public static id = '';
+  public static autoCreateNUpdate = false;
+
   public static create = () => {
     /**/
   };
@@ -123,47 +130,5 @@ export default abstract class Entity {
       return true;
     }
     return false;
-  };
-}
-
-// tslint:disable-next-line: function-name
-export function Table(tableName: string) {
-  return <
-    T extends {
-      tableName: string;
-      create: () => any;
-      new (...args: any[]): Entity;
-    }
-  >(
-    constructor: T,
-  ) => {
-    return class extends constructor {
-      constructor(...args: any[]) {
-        super(...args);
-        constructor.tableName = tableName;
-        constructor.create = () => new constructor();
-      }
-    };
-  };
-}
-
-// tslint:disable-next-line: function-name
-export function NonPersistent() {
-  return (target: any, key: string) => {
-    target.constructor.nonPersistentColumns.push(key);
-  };
-}
-
-// tslint:disable-next-line: function-name
-export function PrimaryKey() {
-  return (target: any, key: string) => {
-    target.constructor.primaryKeys.push(key);
-  };
-}
-
-// tslint:disable-next-line: function-name
-export function Id() {
-  return (target: any, key: string) => {
-    target.constructor.id = key;
   };
 }

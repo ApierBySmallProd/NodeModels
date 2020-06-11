@@ -127,37 +127,9 @@ class Entity {
 exports.default = Entity;
 Entity.tableName = '';
 Entity.nonPersistentColumns = [];
+Entity.columns = [];
 Entity.primaryKeys = [];
 Entity.id = '';
+Entity.autoCreateNUpdate = false;
 Entity.create = () => {
 };
-function Table(tableName) {
-    return (constructor) => {
-        return class extends constructor {
-            constructor(...args) {
-                super(...args);
-                constructor.tableName = tableName;
-                constructor.create = () => new constructor();
-            }
-        };
-    };
-}
-exports.Table = Table;
-function NonPersistent() {
-    return (target, key) => {
-        target.constructor.nonPersistentColumns.push(key);
-    };
-}
-exports.NonPersistent = NonPersistent;
-function PrimaryKey() {
-    return (target, key) => {
-        target.constructor.primaryKeys.push(key);
-    };
-}
-exports.PrimaryKey = PrimaryKey;
-function Id() {
-    return (target, key) => {
-        target.constructor.id = key;
-    };
-}
-exports.Id = Id;
