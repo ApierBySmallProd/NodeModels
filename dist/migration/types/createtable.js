@@ -81,7 +81,7 @@ class Field {
             primary: this.primaryKey,
         });
         this.formatField = () => {
-            return `${this.name} ${this.type}${this.len !== 0 ? `(${this.len})` : ''}${this.null ? '' : ' NOT NULL'}${this.mustBeUnique || this.primaryKey ? ' UNIQUE' : ''}${this.ai ? ' AUTO_INCREMENT' : ''}${this.defaultValue
+            return `\`${this.name}\` ${this.type}${this.len !== 0 ? `(${this.len})` : ''}${this.null ? '' : ' NOT NULL'}${this.mustBeUnique || this.primaryKey ? ' UNIQUE' : ''}${this.ai ? ' AUTO_INCREMENT' : ''}${this.defaultValue
                 ? ` DEFAULT ${this.defaultValue.isSystem
                     ? `${this.defaultValue.value}()`
                     : `'${this.defaultValue.value}'`}`
@@ -89,9 +89,6 @@ class Field {
         };
         this.formatConstraint = (tableName) => {
             const constraints = [];
-            if (this.primaryKey) {
-                constraints.push(`ALTER TABLE ${tableName} ADD CONSTRAINT pk_${tableName.toLowerCase()}_${this.name.toLowerCase()} PRIMARY KEY (${this.name})`);
-            }
             if (this.foreignKey) {
                 constraints.push(`ALTER TABLE ${tableName} ADD CONSTRAINT fk_${tableName.toLowerCase()}_${this.name.toLowerCase()} FOREIGN KEY (${this.name}) REFRENCES ${this.foreignKey.table}(${this.foreignKey.column})`);
             }

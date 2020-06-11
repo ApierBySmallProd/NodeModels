@@ -32,30 +32,45 @@ class GlobalMariaModel extends global_db_1.default {
     constructor() {
         super(...arguments);
         this.pool = null;
-        this.query = (query, params) => __awaiter(this, void 0, void 0, function* () {
-            return new Promise((resolve) => {
+        this.transactionConnection = null;
+        this.query = (query, params, throwErrors = false) => __awaiter(this, void 0, void 0, function* () {
+            return new Promise((resolve) => __awaiter(this, void 0, void 0, function* () {
                 if (!this.pool) {
                     if (GlobalMariaModel.debug)
                         console.error('No pool');
+                    if (throwErrors)
+                        throw Error('No pool');
                     return resolve(null);
                 }
-                this.pool.getConnection((err, connection) => {
-                    if (err) {
+                let connection;
+                if (this.transactionConnection) {
+                    connection = this.transactionConnection;
+                }
+                else {
+                    connection = yield this.getConnection();
+                }
+                if (!connection) {
+                    if (GlobalMariaModel.debug)
+                        console.error('Cannot get connection');
+                    if (throwErrors) {
+                        throw Error('Cannot get connection');
+                    }
+                    return resolve(null);
+                }
+                connection.query(query, params, (error, results, fields) => {
+                    if (connection && !this.transactionConnection)
+                        connection.release();
+                    if (error) {
                         if (GlobalMariaModel.debug)
-                            console.error(err);
+                            console.error(error);
+                        if (throwErrors) {
+                            throw error;
+                        }
                         return resolve(null);
                     }
-                    connection.query(query, params, (error, results, fields) => {
-                        connection.release();
-                        if (error) {
-                            if (GlobalMariaModel.debug)
-                                console.error(error);
-                            return resolve(null);
-                        }
-                        resolve(results);
-                    });
+                    resolve(results);
                 });
-            });
+            }));
         });
         this.insert = (tableName, attributes) => __awaiter(this, void 0, void 0, function* () {
             var _a;
@@ -80,6 +95,73 @@ class GlobalMariaModel extends global_db_1.default {
             const query = `DELETE FROM ${tableName} ${wheres.length ? `WHERE ${where}` : ''}`;
             return yield this.query(query, wheres.map((w) => w.value));
         });
+        this.startTransaction = () => __awaiter(this, void 0, void 0, function* () {
+            return new Promise((resolve, reject) => {
+                if (this.transactionConnection) {
+                    if (GlobalMariaModel.debug)
+                        console.error('Already in a transaction');
+                    return resolve(false);
+                }
+                if (!this.pool) {
+                    if (GlobalMariaModel.debug)
+                        console.error('No pool');
+                    return resolve(false);
+                }
+                this.pool.getConnection((err, connection) => {
+                    if (err) {
+                        if (GlobalMariaModel.debug)
+                            console.error(err);
+                        return resolve(false);
+                    }
+                    connection.beginTransaction((error) => {
+                        if (error) {
+                            return resolve(false);
+                        }
+                        this.transactionConnection = connection;
+                        return resolve(true);
+                    });
+                });
+            });
+        });
+        this.commit = () => __awaiter(this, void 0, void 0, function* () {
+            return new Promise((resolve, reject) => {
+                if (!this.transactionConnection) {
+                    if (GlobalMariaModel.debug)
+                        console.error('Not in a transaction');
+                    return resolve();
+                }
+                this.transactionConnection.commit((err) => {
+                    var _a;
+                    if (err) {
+                        if (GlobalMariaModel.debug)
+                            console.error(err);
+                        (_a = this.transactionConnection) === null || _a === void 0 ? void 0 : _a.rollback(() => {
+                            this.transactionConnection = null;
+                            resolve();
+                        });
+                    }
+                    this.transactionConnection = null;
+                    resolve();
+                });
+            });
+        });
+        this.rollback = () => __awaiter(this, void 0, void 0, function* () {
+            return new Promise((resolve) => {
+                if (!this.transactionConnection) {
+                    if (GlobalMariaModel.debug)
+                        console.error('Not in a transaction');
+                    return resolve();
+                }
+                this.transactionConnection.rollback((err) => {
+                    this.transactionConnection = null;
+                    if (err) {
+                        if (GlobalMariaModel.debug)
+                            console.error(err);
+                    }
+                    resolve();
+                });
+            });
+        });
         this.setPool = (config) => __awaiter(this, void 0, void 0, function* () {
             try {
                 const p = yield getPool(config);
@@ -92,6 +174,17 @@ class GlobalMariaModel extends global_db_1.default {
                 console.error(err);
             }
         });
+        this.getConnection = () => {
+            return new Promise((resolve, reject) => {
+                var _a;
+                (_a = this.pool) === null || _a === void 0 ? void 0 : _a.getConnection((err, connection) => {
+                    if (err) {
+                        return resolve(null);
+                    }
+                    return resolve(connection);
+                });
+            });
+        };
         this.getWhereAttributes = (wheres) => {
             const newWheres = wheres.filter((w) => this.isWhereAttribute(w));
             return newWheres.map((w) => w.value);

@@ -98,11 +98,11 @@ export class Field {
   });
 
   public formatField = () => {
-    return `${this.name} ${this.type}${this.len !== 0 ? `(${this.len})` : ''}${
-      this.null ? '' : ' NOT NULL'
-    }${this.mustBeUnique || this.primaryKey ? ' UNIQUE' : ''}${
-      this.ai ? ' AUTO_INCREMENT' : ''
-    }${
+    return `\`${this.name}\` ${this.type}${
+      this.len !== 0 ? `(${this.len})` : ''
+    }${this.null ? '' : ' NOT NULL'}${
+      this.mustBeUnique || this.primaryKey ? ' UNIQUE' : ''
+    }${this.ai ? ' AUTO_INCREMENT' : ''}${
       this.defaultValue
         ? ` DEFAULT ${
             this.defaultValue.isSystem
@@ -115,13 +115,16 @@ export class Field {
 
   public formatConstraint = (tableName: string) => {
     const constraints = [];
+    // Maybe put this again later
+    /*
     if (this.primaryKey) {
       constraints.push(
-        `ALTER TABLE ${tableName} ADD CONSTRAINT pk_${tableName.toLowerCase()}_${this.name.toLowerCase()} PRIMARY KEY (${
+        `ALTER TABLE \`${tableName}\` ADD CONSTRAINT \`pk_${tableName.toLowerCase()}_${this.name.toLowerCase()}\` PRIMARY KEY (\`${
           this.name
-        })`,
+        }\`)`,
       );
     }
+    */
     if (this.foreignKey) {
       constraints.push(
         `ALTER TABLE ${tableName} ADD CONSTRAINT fk_${tableName.toLowerCase()}_${this.name.toLowerCase()} FOREIGN KEY (${

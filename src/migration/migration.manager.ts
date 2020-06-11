@@ -19,24 +19,27 @@ export default class MigrationManager {
    * (call the up function of every migration)
    */
   public migrate = async (targetMigration?: string, dbName?: string) => {
+    console.log('\x1b[33mStarting migrations\x1b[0m');
+    const model = DbManager.get().get(dbName);
+    if (!model) {
+      throw new Error('Database not found');
+    }
     const res = fs.readdirSync(this.config.migrationPath);
-    const migration = new Migration();
     res.sort();
-    res.forEach((migrationFile) => {
+    await res.reduce(async (prev, migrationFile) => {
+      await prev;
       const migrationPath = path.resolve(
         this.config.migrationPath,
         migrationFile,
       );
       const migrationRequired = require(migrationPath);
       if (!targetMigration || targetMigration === migrationRequired.name) {
+        const migration = new Migration(migrationRequired.name, 'up');
+        console.log(`\x1b[35m## Migrating ${migrationRequired.name}\x1b[0m`);
         migrationRequired.up(migration);
+        await migration.execute(model);
       }
-    });
-    const model = DbManager.get().get(dbName);
-    if (!model) {
-      throw new Error('Database not found');
-    }
-    await migration.execute(model);
+    }, Promise.resolve());
   };
 
   /**
@@ -44,23 +47,26 @@ export default class MigrationManager {
    * (call the down function of every migrations)
    */
   public reset = async (targetMigration?: string, dbName?: string) => {
+    console.log('\x1b[33mStarting migrations\x1b[0m');
+    const model = DbManager.get().get(dbName);
+    if (!model) {
+      throw new Error('Database not found');
+    }
     const res = fs.readdirSync(this.config.migrationPath);
-    const migration = new Migration();
     res.sort();
-    res.forEach((migrationFile) => {
+    await res.reduce(async (prev, migrationFile) => {
+      await prev;
       const migrationPath = path.resolve(
         this.config.migrationPath,
         migrationFile,
       );
       const migrationRequired = require(migrationPath);
       if (!targetMigration || targetMigration === migrationRequired.name) {
+        console.log(`\x1b[35m## Migrating ${migrationRequired.name}\x1b[0m`);
+        const migration = new Migration(migrationRequired.name, 'down');
         migrationRequired.down(migration);
+        await migration.execute(model);
       }
-    });
-    const model = DbManager.get().get(dbName);
-    if (!model) {
-      throw new Error('Database not found');
-    }
-    await migration.execute(model);
+    }, Promise.resolve());
   };
 }

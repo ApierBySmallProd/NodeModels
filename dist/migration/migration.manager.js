@@ -19,38 +19,44 @@ const path_1 = __importDefault(require("path"));
 class MigrationManager {
     constructor(config) {
         this.migrate = (targetMigration, dbName) => __awaiter(this, void 0, void 0, function* () {
-            const res = fs_1.default.readdirSync(this.config.migrationPath);
-            const migration = new migration_1.default();
-            res.sort();
-            res.forEach((migrationFile) => {
-                const migrationPath = path_1.default.resolve(this.config.migrationPath, migrationFile);
-                const migrationRequired = require(migrationPath);
-                if (!targetMigration || targetMigration === migrationRequired.name) {
-                    migrationRequired.up(migration);
-                }
-            });
+            console.log('\x1b[33mStarting migrations\x1b[0m');
             const model = dbmanager_1.default.get().get(dbName);
             if (!model) {
                 throw new Error('Database not found');
             }
-            yield migration.execute(model);
+            const res = fs_1.default.readdirSync(this.config.migrationPath);
+            res.sort();
+            yield res.reduce((prev, migrationFile) => __awaiter(this, void 0, void 0, function* () {
+                yield prev;
+                const migrationPath = path_1.default.resolve(this.config.migrationPath, migrationFile);
+                const migrationRequired = require(migrationPath);
+                if (!targetMigration || targetMigration === migrationRequired.name) {
+                    const migration = new migration_1.default(migrationRequired.name, 'up');
+                    console.log(`\x1b[35m## Migrating ${migrationRequired.name}\x1b[0m`);
+                    migrationRequired.up(migration);
+                    yield migration.execute(model);
+                }
+            }), Promise.resolve());
         });
         this.reset = (targetMigration, dbName) => __awaiter(this, void 0, void 0, function* () {
-            const res = fs_1.default.readdirSync(this.config.migrationPath);
-            const migration = new migration_1.default();
-            res.sort();
-            res.forEach((migrationFile) => {
-                const migrationPath = path_1.default.resolve(this.config.migrationPath, migrationFile);
-                const migrationRequired = require(migrationPath);
-                if (!targetMigration || targetMigration === migrationRequired.name) {
-                    migrationRequired.down(migration);
-                }
-            });
+            console.log('\x1b[33mStarting migrations\x1b[0m');
             const model = dbmanager_1.default.get().get(dbName);
             if (!model) {
                 throw new Error('Database not found');
             }
-            yield migration.execute(model);
+            const res = fs_1.default.readdirSync(this.config.migrationPath);
+            res.sort();
+            yield res.reduce((prev, migrationFile) => __awaiter(this, void 0, void 0, function* () {
+                yield prev;
+                const migrationPath = path_1.default.resolve(this.config.migrationPath, migrationFile);
+                const migrationRequired = require(migrationPath);
+                if (!targetMigration || targetMigration === migrationRequired.name) {
+                    console.log(`\x1b[35m## Migrating ${migrationRequired.name}\x1b[0m`);
+                    const migration = new migration_1.default(migrationRequired.name, 'down');
+                    migrationRequired.down(migration);
+                    yield migration.execute(model);
+                }
+            }), Promise.resolve());
         });
         this.config = config;
     }

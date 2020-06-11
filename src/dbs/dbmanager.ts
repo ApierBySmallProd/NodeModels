@@ -4,6 +4,14 @@ import GlobalPostgreModel from './global/postgres.db';
 
 export type Sgbd = 'postgre' | 'mariadb';
 
+export interface Config {
+  migrationPath: string;
+}
+
+const defaultConfig: Config = {
+  migrationPath: 'database/migrations',
+};
+
 export default class DbManager {
   public static get = () => {
     if (!DbManager._instance) {
@@ -13,8 +21,13 @@ export default class DbManager {
   };
   private static _instance: DbManager;
 
+  private config: Config = defaultConfig;
   private dbs: Db[] = [];
   private constructor() {}
+
+  public setConfig = (config: Config) => {
+    this.config = { ...config, ...this.config };
+  };
 
   public add = async (
     sgbd: Sgbd,

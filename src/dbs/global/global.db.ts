@@ -18,7 +18,12 @@ export default abstract class GlobalModel {
     }
   }
 
-  public abstract query(query: string, params?: string[]): Promise<any>;
+  /* Querying */
+  public abstract query(
+    query: string,
+    params?: string[],
+    throwErrors?: boolean,
+  ): Promise<any>;
   public abstract setPool(config: any): Promise<void>;
 
   public abstract insert(
@@ -46,4 +51,9 @@ export default abstract class GlobalModel {
     limit: number,
     offset: number,
   ): Promise<any>;
+
+  /* Transactions */
+  public abstract startTransaction(): Promise<boolean>;
+  public abstract commit(): Promise<void>;
+  public abstract rollback(): Promise<void>;
 }

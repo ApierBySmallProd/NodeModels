@@ -1,46 +1,48 @@
 {
-    "name": "@smallprod/models",
-    "version": "4.0.0",
-    "main": "./dist/index.js",
-    "types": "./dist/index.d.ts",
-    "description": "Model library",
-    "keywords": [
-        "SmallProd",
-        "Model",
-        "Postgres",
-        "MariaDb",
-        "MySQL",
-        "Migration"
-    ],
-    "homepage": "",
-    "bugs": {},
-    "author": "SmallProd Team",
-    "license": "MIT",
-    "private": false,
-    "scripts": {
-        "build": "tsc --project tsconfig.json",
-        "run": "node dist/index.js",
-        "db:migrate": "node exemples/migration.js migrate",
-        "db:reset": "node exemples/migration.js reset"
-    },
-    "devDependencies": {
-        "@smallprod/models": "file:./dist",
-        "@types/mysql": "^2.15.13",
-        "@types/pg": "^7.14.3",
-        "prettier": "^2.0.5",
-        "ts-loader": "^7.0.1",
-        "tslint": "^6.1.1",
-        "tslint-config-airbnb": "^5.11.2",
-        "tslint-config-prettier": "^1.18.0",
-        "tslint-plugin-prettier": "^2.3.0",
-        "typescript": "^3.8.3"
-    },
-    "dependencies": {
-        "mysql": "^2.18.1",
-        "pg": "^8.0.3"
-    },
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/ApierBySmallProd/NodeModels.git"
-    }
+  "name": "@smallprod/models",
+  "version": "4.1.0",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "description": "Model library",
+  "keywords": [
+    "SmallProd",
+    "Model",
+    "Postgres",
+    "MariaDb",
+    "MySQL",
+    "Migration",
+    "ORM",
+    "Entity"
+  ],
+  "homepage": "",
+  "bugs": {},
+  "author": "SmallProd Team",
+  "license": "MIT",
+  "private": false,
+  "scripts": {
+    "build": "tsc --project tsconfig.json",
+    "run": "node dist/index.js",
+    "db:migrate": "node exemples/migration.js migrate",
+    "db:reset": "node exemples/migration.js reset"
+  },
+  "devDependencies": {
+    "@smallprod/models": "file:./dist",
+    "@types/mysql": "^2.15.13",
+    "@types/pg": "^7.14.3",
+    "prettier": "^2.0.5",
+    "ts-loader": "^7.0.1",
+    "tslint": "^6.1.1",
+    "tslint-config-airbnb": "^5.11.2",
+    "tslint-config-prettier": "^1.18.0",
+    "tslint-plugin-prettier": "^2.3.0",
+    "typescript": "^3.8.3"
+  },
+  "dependencies": {
+    "mysql": "^2.18.1",
+    "pg": "^8.0.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ApierBySmallProd/NodeModels.git"
+  }
 }

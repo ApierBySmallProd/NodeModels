@@ -29,14 +29,38 @@ const getPool = (config, quitOnFail = false) => __awaiter(void 0, void 0, void 0
                 reject(err);
             }
         });
-        const client = yield pool.connect();
-        resolve(client);
+        resolve(pool);
     }));
 });
 class GlobalPostgreModel extends global_db_1.default {
     constructor() {
         super(...arguments);
         this.pool = null;
+        this.transactionConnection = null;
+        this.transactionDone = null;
+        this.query = (query, params, throwErrors = false) => __awaiter(this, void 0, void 0, function* () {
+            if (!this.pool) {
+                if (throwErrors) {
+                    throw Error('No pool');
+                }
+                return null;
+            }
+            try {
+                if (!this.transactionConnection) {
+                    return yield this.pool.query(query, params);
+                }
+                return yield this.transactionConnection.query(query, params);
+            }
+            catch (err) {
+                if (GlobalPostgreModel.debug) {
+                    console.error(err);
+                }
+                if (throwErrors) {
+                    throw err;
+                }
+                return null;
+            }
+        });
         this.insert = (tableName, attributes) => __awaiter(this, void 0, void 0, function* () {
             const columns = attributes.map((a) => a.column).join(', ');
             const params = attributes.map((a, index) => `$${index + 1}`).join(', ');
@@ -60,18 +84,77 @@ class GlobalPostgreModel extends global_db_1.default {
             const query = `DELETE FROM ${tableName} ${wheres.length ? `WHERE ${where}` : ''}`;
             return (_b = (yield this.query(query, wheres.map((w) => w.value)))) === null || _b === void 0 ? void 0 : _b.rowCount;
         });
-        this.query = (query, params) => __awaiter(this, void 0, void 0, function* () {
-            if (!this.pool)
-                return null;
-            try {
-                return yield this.pool.query(query, params);
-            }
-            catch (err) {
-                if (GlobalPostgreModel.debug) {
-                    console.error(err);
+        this.startTransaction = () => __awaiter(this, void 0, void 0, function* () {
+            return new Promise((resolve, reject) => {
+                if (this.transactionConnection) {
+                    if (GlobalPostgreModel.debug)
+                        console.error('Already in a transaction');
+                    return resolve(false);
                 }
-                return null;
-            }
+                if (!this.pool) {
+                    if (GlobalPostgreModel.debug)
+                        console.error('No pool');
+                    return resolve(false);
+                }
+                this.pool.connect((err, client, done) => {
+                    if (err) {
+                        if (GlobalPostgreModel.debug)
+                            console.error(err);
+                        return resolve(false);
+                    }
+                    client.query('BEGIN', (error) => {
+                        if (error) {
+                            done();
+                            return resolve(false);
+                        }
+                        this.transactionConnection = client;
+                        resolve(true);
+                    });
+                });
+            });
+        });
+        this.commit = () => __awaiter(this, void 0, void 0, function* () {
+            return new Promise((resolve, reject) => {
+                if (!this.transactionConnection) {
+                    if (GlobalPostgreModel.debug)
+                        console.error('Not in a transaction');
+                    return resolve();
+                }
+                this.transactionConnection.query('COMMIT', (err) => {
+                    var _a;
+                    if (err) {
+                        if (GlobalPostgreModel.debug)
+                            console.error(err);
+                        (_a = this.transactionConnection) === null || _a === void 0 ? void 0 : _a.query('ROLLBACK', (e) => {
+                            this.transactionConnection = null;
+                            if (e) {
+                                if (GlobalPostgreModel.debug)
+                                    console.error(e);
+                            }
+                            resolve();
+                        });
+                    }
+                    this.transactionConnection = null;
+                    resolve();
+                });
+            });
+        });
+        this.rollback = () => __awaiter(this, void 0, void 0, function* () {
+            return new Promise((resolve) => {
+                if (!this.transactionConnection) {
+                    if (GlobalPostgreModel.debug)
+                        console.error('Not in a transaction');
+                    return resolve();
+                }
+                this.transactionConnection.query('ROLLBACK', (err) => {
+                    this.transactionConnection = null;
+                    if (err) {
+                        if (GlobalPostgreModel.debug)
+                            console.error(err);
+                    }
+                    resolve();
+                });
+            });
         });
         this.setPool = (config) => __awaiter(this, void 0, void 0, function* () {
             const p = yield getPool(config);

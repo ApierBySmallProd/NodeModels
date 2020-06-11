@@ -1,5 +1,15 @@
 # Changelog
 
+## V4.1.0
+
+### ADD
+
+- Config in **DbManager**
+- Transactions
+- Migration table
+
+---
+
 ## V4.0.0
 
 ### ADD

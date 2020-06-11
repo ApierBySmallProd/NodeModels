@@ -23,10 +23,10 @@ export default class AlterTable extends MigrationType {
 
   public formatQuery = () => {
     const toAdd = this.addedFields.map(
-      (f) => `ALTER TABLE ${this.tableName} ADD ${f.formatField()}`,
+      (f) => `ALTER TABLE \`${this.tableName}\` ADD ${f.formatField()}`,
     );
     const toRemove = this.removedFields.map(
-      (f) => `ALTER TABLE ${this.tableName} DROP COLUMN ${f}`,
+      (f) => `ALTER TABLE \`${this.tableName}\` DROP COLUMN \`${f}\``,
     );
 
     return {

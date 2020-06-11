@@ -19,8 +19,8 @@ class AlterTable extends migrationtype_1.default {
             this.removedFields.push(fieldName);
         };
         this.formatQuery = () => {
-            const toAdd = this.addedFields.map((f) => `ALTER TABLE ${this.tableName} ADD ${f.formatField()}`);
-            const toRemove = this.removedFields.map((f) => `ALTER TABLE ${this.tableName} DROP COLUMN ${f}`);
+            const toAdd = this.addedFields.map((f) => `ALTER TABLE \`${this.tableName}\` ADD ${f.formatField()}`);
+            const toRemove = this.removedFields.map((f) => `ALTER TABLE \`${this.tableName}\` DROP COLUMN \`${f}\``);
             return {
                 query: [...toRemove, ...toAdd],
             };

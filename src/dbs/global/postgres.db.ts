@@ -12,7 +12,7 @@ import GlobalModel from './global.db';
 const getPool = async (
   config: PoolConfig,
   quitOnFail = false,
-): Promise<PoolClient | null> => {
+): Promise<Pool | null> => {
   return new Promise(async (resolve, reject) => {
     const pool = new Pool(config);
     pool.on('error', (err) => {
@@ -26,14 +26,42 @@ const getPool = async (
         reject(err);
       }
     });
-    const client = await pool.connect();
-    resolve(client);
+    resolve(pool);
   });
 };
 
 export default class GlobalPostgreModel extends GlobalModel {
-  protected pool: PoolClient | null = null;
+  protected pool: Pool | null = null;
+  protected transactionConnection: PoolClient | null = null;
+  protected transactionDone: (() => void) | null = null;
 
+  /* Querying */
+  public query = async (
+    query: string,
+    params?: string[],
+    throwErrors = false,
+  ): Promise<QueryResult | null> => {
+    if (!this.pool) {
+      if (throwErrors) {
+        throw Error('No pool');
+      }
+      return null;
+    }
+    try {
+      if (!this.transactionConnection) {
+        return await this.pool.query(query, params);
+      }
+      return await this.transactionConnection.query(query, params);
+    } catch (err) {
+      if (GlobalPostgreModel.debug) {
+        console.error(err);
+      }
+      if (throwErrors) {
+        throw err;
+      }
+      return null;
+    }
+  };
   public insert = async (tableName: string, attributes: Attribute[]) => {
     const columns = attributes.map((a) => a.column).join(', ');
     const params = attributes.map((a, index) => `$${index + 1}`).join(', ');
@@ -94,19 +122,69 @@ export default class GlobalPostgreModel extends GlobalModel {
     )?.rowCount;
   };
 
-  public query = async (
-    query: string,
-    params?: string[],
-  ): Promise<QueryResult | null> => {
-    if (!this.pool) return null;
-    try {
-      return await this.pool.query(query, params);
-    } catch (err) {
-      if (GlobalPostgreModel.debug) {
-        console.error(err);
+  /* Transaction */
+  public startTransaction = async (): Promise<boolean> => {
+    return new Promise((resolve, reject) => {
+      if (this.transactionConnection) {
+        if (GlobalPostgreModel.debug) console.error('Already in a transaction');
+        return resolve(false);
       }
-      return null;
-    }
+      if (!this.pool) {
+        if (GlobalPostgreModel.debug) console.error('No pool');
+        return resolve(false);
+      }
+      this.pool.connect((err, client, done) => {
+        if (err) {
+          if (GlobalPostgreModel.debug) console.error(err);
+          return resolve(false);
+        }
+        client.query('BEGIN', (error) => {
+          if (error) {
+            done();
+            return resolve(false);
+          }
+          this.transactionConnection = client;
+          resolve(true);
+        });
+      });
+    });
+  };
+  public commit = async (): Promise<void> => {
+    return new Promise((resolve, reject) => {
+      if (!this.transactionConnection) {
+        if (GlobalPostgreModel.debug) console.error('Not in a transaction');
+        return resolve();
+      }
+      this.transactionConnection.query('COMMIT', (err) => {
+        if (err) {
+          if (GlobalPostgreModel.debug) console.error(err);
+          this.transactionConnection?.query('ROLLBACK', (e) => {
+            this.transactionConnection = null;
+            if (e) {
+              if (GlobalPostgreModel.debug) console.error(e);
+            }
+            resolve();
+          });
+        }
+        this.transactionConnection = null;
+        resolve();
+      });
+    });
+  };
+  public rollback = async (): Promise<void> => {
+    return new Promise((resolve) => {
+      if (!this.transactionConnection) {
+        if (GlobalPostgreModel.debug) console.error('Not in a transaction');
+        return resolve();
+      }
+      this.transactionConnection.query('ROLLBACK', (err) => {
+        this.transactionConnection = null;
+        if (err) {
+          if (GlobalPostgreModel.debug) console.error(err);
+        }
+        resolve();
+      });
+    });
   };
 
   public setPool = async (config: PoolConfig) => {

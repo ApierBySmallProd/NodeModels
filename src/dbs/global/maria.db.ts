@@ -26,26 +26,43 @@ const getPool = async (config: mysql.PoolConfig): Promise<mysql.Pool> => {
 
 export default class GlobalMariaModel extends GlobalModel {
   protected pool: mysql.Pool | null = null;
+  private transactionConnection: mysql.PoolConnection | null = null;
 
-  public query = async (query: string, params?: string[]): Promise<any> => {
-    return new Promise((resolve) => {
+  /* Querying */
+  public query = async (
+    query: string,
+    params?: string[],
+    throwErrors = false,
+  ): Promise<any> => {
+    return new Promise(async (resolve) => {
       if (!this.pool) {
         if (GlobalMariaModel.debug) console.error('No pool');
+        if (throwErrors) throw Error('No pool');
         return resolve(null);
       }
-      this.pool.getConnection((err, connection) => {
-        if (err) {
-          if (GlobalMariaModel.debug) console.error(err);
+      let connection: mysql.PoolConnection | null;
+      if (this.transactionConnection) {
+        connection = this.transactionConnection;
+      } else {
+        connection = await this.getConnection();
+      }
+      if (!connection) {
+        if (GlobalMariaModel.debug) console.error('Cannot get connection');
+        if (throwErrors) {
+          throw Error('Cannot get connection');
+        }
+        return resolve(null);
+      }
+      connection.query(query, params, (error, results, fields) => {
+        if (connection && !this.transactionConnection) connection.release();
+        if (error) {
+          if (GlobalMariaModel.debug) console.error(error);
+          if (throwErrors) {
+            throw error;
+          }
           return resolve(null);
         }
-        connection.query(query, params, (error, results, fields) => {
-          connection.release();
-          if (error) {
-            if (GlobalMariaModel.debug) console.error(error);
-            return resolve(null);
-          }
-          resolve(results);
-        });
+        resolve(results);
       });
     });
   };
@@ -110,6 +127,67 @@ export default class GlobalMariaModel extends GlobalModel {
     );
   };
 
+  /* Transaction */
+  public startTransaction = async (): Promise<boolean> => {
+    return new Promise((resolve, reject) => {
+      if (this.transactionConnection) {
+        if (GlobalMariaModel.debug) console.error('Already in a transaction');
+        return resolve(false);
+      }
+      if (!this.pool) {
+        if (GlobalMariaModel.debug) console.error('No pool');
+        return resolve(false);
+      }
+      this.pool.getConnection((err, connection) => {
+        if (err) {
+          if (GlobalMariaModel.debug) console.error(err);
+          return resolve(false);
+        }
+        connection.beginTransaction((error) => {
+          if (error) {
+            return resolve(false);
+          }
+          this.transactionConnection = connection;
+          return resolve(true);
+        });
+      });
+    });
+  };
+  public commit = async (): Promise<void> => {
+    return new Promise((resolve, reject) => {
+      if (!this.transactionConnection) {
+        if (GlobalMariaModel.debug) console.error('Not in a transaction');
+        return resolve();
+      }
+      this.transactionConnection.commit((err) => {
+        if (err) {
+          if (GlobalMariaModel.debug) console.error(err);
+          this.transactionConnection?.rollback(() => {
+            this.transactionConnection = null;
+            resolve();
+          });
+        }
+        this.transactionConnection = null;
+        resolve();
+      });
+    });
+  };
+  public rollback = async (): Promise<void> => {
+    return new Promise((resolve) => {
+      if (!this.transactionConnection) {
+        if (GlobalMariaModel.debug) console.error('Not in a transaction');
+        return resolve();
+      }
+      this.transactionConnection.rollback((err) => {
+        this.transactionConnection = null;
+        if (err) {
+          if (GlobalMariaModel.debug) console.error(err);
+        }
+        resolve();
+      });
+    });
+  };
+
   public setPool = async (config: mysql.PoolConfig) => {
     try {
       const p = await getPool(config);
@@ -120,6 +198,17 @@ export default class GlobalMariaModel extends GlobalModel {
       console.error('Cannot connect to database');
       console.error(err);
     }
+  };
+
+  private getConnection = (): Promise<mysql.PoolConnection | null> => {
+    return new Promise((resolve, reject) => {
+      this.pool?.getConnection((err, connection) => {
+        if (err) {
+          return resolve(null);
+        }
+        return resolve(connection);
+      });
+    });
   };
 
   private getWhereAttributes = (wheres: any[]) => {

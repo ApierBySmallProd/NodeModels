@@ -14,9 +14,16 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const maria_db_1 = __importDefault(require("./global/maria.db"));
 const postgres_db_1 = __importDefault(require("./global/postgres.db"));
+const defaultConfig = {
+    migrationPath: 'database/migrations',
+};
 class DbManager {
     constructor() {
+        this.config = defaultConfig;
         this.dbs = [];
+        this.setConfig = (config) => {
+            this.config = Object.assign(Object.assign({}, config), this.config);
+        };
         this.add = (sgbd, host, port, user, password, database, name = '', debug = false) => __awaiter(this, void 0, void 0, function* () {
             switch (sgbd) {
                 case 'mariadb': {
