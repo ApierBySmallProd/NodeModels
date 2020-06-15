@@ -8,12 +8,14 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
+    result["default"] = mod;
+    return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const maria_db_1 = __importDefault(require("./global/maria.db"));
-const postgres_db_1 = __importDefault(require("./global/postgres.db"));
 const defaultConfig = {
     migrationPath: 'database/migrations',
 };
@@ -25,10 +27,11 @@ class DbManager {
             this.config = Object.assign(Object.assign({}, this.config), config);
         };
         this.getConfig = () => this.config;
-        this.add = (sgbd, host, port, user, password, database, name = '', debug = false) => __awaiter(this, void 0, void 0, function* () {
-            switch (sgbd) {
+        this.add = (dbms, host, port, user, password, database, name = '', debug = false) => __awaiter(this, void 0, void 0, function* () {
+            switch (dbms) {
                 case 'mariadb': {
-                    const ndb = new maria_db_1.default(debug);
+                    const GlobalMariaModel = (yield Promise.resolve().then(() => __importStar(require('./global/maria.db')))).default;
+                    const ndb = new GlobalMariaModel(debug);
                     yield ndb.setPool({
                         host,
                         user,
@@ -40,7 +43,9 @@ class DbManager {
                     break;
                 }
                 case 'postgre': {
-                    const ndb = new postgres_db_1.default(debug);
+                    const GlobalPostgreModel = (yield Promise.resolve().then(() => __importStar(require('./global/postgres.db'))))
+                        .default;
+                    const ndb = new GlobalPostgreModel(debug);
                     yield ndb.setPool({
                         host,
                         port,
@@ -48,6 +53,32 @@ class DbManager {
                         password,
                         database,
                     });
+                    this.dbs.push({ name, db: ndb });
+                    break;
+                }
+                case 'oracle': {
+                    const GlobalOracleModel = (yield Promise.resolve().then(() => __importStar(require('./global/oracle.db')))).default;
+                    const ndb = new GlobalOracleModel(debug);
+                    yield ndb.setPool({
+                        user,
+                        password,
+                        connectString: `${host}:${port}/${database}`,
+                    });
+                    this.dbs.push({ name, db: ndb });
+                    break;
+                }
+                case 'mssql': {
+                    const GlobalMicrosoftModel = (yield Promise.resolve().then(() => __importStar(require('./global/microsoft.db'))))
+                        .default;
+                    const ndb = new GlobalMicrosoftModel(debug);
+                    yield ndb.setPool({
+                        port,
+                        user,
+                        password,
+                        database,
+                        server: host,
+                    });
+                    this.dbs.push({ name, db: ndb });
                     break;
                 }
                 default: {

@@ -1,5 +1,13 @@
 # Changelog
 
+## V4.4.2
+
+### FIX
+
+- Modules import (now you don't have have to add modules for all dbms)
+- Support for Oracle Db
+- Support for MSSql
+
 ## V4.4.1
 
 ### ADD

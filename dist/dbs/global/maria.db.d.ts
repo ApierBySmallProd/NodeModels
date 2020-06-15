@@ -1,7 +1,7 @@
 import { AttrAndAlias, Attribute, SortAttribute, WhereAttribute, WhereKeyWord } from '../../entities/querys/query';
-import GlobalModel from './global.db';
+import GlobalSqlModel from './global.sql';
 import mysql from 'mysql';
-export default class GlobalMariaModel extends GlobalModel {
+export default class GlobalMariaModel extends GlobalSqlModel {
     protected pool: mysql.Pool | null;
     private transactionConnection;
     query: (query: string, params?: string[] | undefined, throwErrors?: boolean) => Promise<any>;
@@ -14,13 +14,4 @@ export default class GlobalMariaModel extends GlobalModel {
     rollback: () => Promise<void>;
     setPool: (config: mysql.PoolConfig) => Promise<void>;
     private getConnection;
-    private getWhereAttributes;
-    private computeAttributes;
-    private computeAttributeFunction;
-    private computeWhere;
-    private computeSort;
-    private computeSortMode;
-    private isWhereAttribute;
-    private computeWhereAttribute;
-    private computeWhereKeyWord;
 }

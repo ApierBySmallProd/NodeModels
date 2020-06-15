@@ -1,7 +1,7 @@
 import { AttrAndAlias, Attribute, SortAttribute, WhereAttribute, WhereKeyWord } from '../../entities/querys/query';
 import { Pool, PoolClient, PoolConfig, QueryResult } from 'pg';
-import GlobalModel from './global.db';
-export default class GlobalPostgreModel extends GlobalModel {
+import GlobalSqlModel from './global.sql';
+export default class GlobalPostgreModel extends GlobalSqlModel {
     protected pool: Pool | null;
     protected transactionConnection: PoolClient | null;
     protected transactionDone: (() => void) | null;
@@ -14,13 +14,4 @@ export default class GlobalPostgreModel extends GlobalModel {
     commit: () => Promise<void>;
     rollback: () => Promise<void>;
     setPool: (config: PoolConfig) => Promise<void>;
-    private getWhereAttributes;
-    private computeAttributes;
-    private computeAttributeFunction;
-    private computeWhere;
-    private computeSort;
-    private computeSortMode;
-    private isWhereAttribute;
-    private computeWhereAttribute;
-    private computeWhereKeyWord;
 }

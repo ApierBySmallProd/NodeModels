@@ -1,10 +1,28 @@
 # TODO
 
 - ~~Reverse down migration order~~
-- Fix remove field error on constraint
-- Add OracleDb, MSSql, SQLite maybe more
+- ~~Add OracleDb, MSSql~~
 - ~~Add Relations~~
 - ~~Fetch for relations (auto and not)~~
-- Refresh entity
 - ~~Date~~
 - ~~Contexts~~
+- Join
+- Refresh entity
+- Fix remove field error on constraint
+
+## Dbms to add
+
+- ~~Oracle~~
+- ~~MySql~~
+- ~~MSSql~~
+- ~~PostgreSql~~
+- MongoDb
+- Db2
+- ElasticSearch
+- Microsoft Access
+- SQLite
+- Cassandra
+- Splunk
+- ~~MariaDb~~
+- Teradata
+- Hive

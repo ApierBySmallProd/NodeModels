@@ -1,6 +1,6 @@
 {
     "name": "@smallprod/models",
-    "version": "4.4.1",
+    "version": "4.4.2",
     "main": "./dist/index.js",
     "types": "./dist/index.d.ts",
     "description": "Model library",
@@ -10,6 +10,8 @@
         "Postgres",
         "MariaDb",
         "MySQL",
+        "OracleDB",
+        "MSSql",
         "Migration",
         "ORM",
         "Entity"
@@ -27,8 +29,14 @@
     },
     "devDependencies": {
         "@smallprod/models": "file:./dist",
+        "@types/mssql": "^6.0.2",
         "@types/mysql": "^2.15.13",
+        "@types/oracledb": "^4.2.1",
         "@types/pg": "^7.14.3",
+        "@types/readable-stream": "2.3.5",
+        "mssql": "^6.2.0",
+        "oracledb": "^4.2.0",
+        "pg": "^8.2.1",
         "prettier": "^2.0.5",
         "ts-loader": "^7.0.1",
         "tslint": "^6.1.1",
@@ -38,8 +46,7 @@
         "typescript": "^3.8.3"
     },
     "dependencies": {
-        "mysql": "^2.18.1",
-        "pg": "^8.0.3"
+        "mysql": "^2.18.1"
     },
     "repository": {
         "type": "git",

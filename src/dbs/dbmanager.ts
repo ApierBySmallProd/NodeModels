@@ -1,8 +1,6 @@
-import GlobalMariaModel from './global/maria.db';
 import GlobalModel from './global/global.db';
-import GlobalPostgreModel from './global/postgres.db';
 
-export type Sgbd = 'postgre' | 'mariadb';
+export type Dbms = 'postgre' | 'mariadb' | 'oracle' | 'mssql';
 
 export interface Config {
   migrationPath: string;
@@ -32,7 +30,7 @@ export default class DbManager {
   public getConfig = () => this.config;
 
   public add = async (
-    sgbd: Sgbd,
+    dbms: Dbms,
     host: string,
     port: number,
     user: string,
@@ -41,8 +39,9 @@ export default class DbManager {
     name = '',
     debug = false,
   ) => {
-    switch (sgbd) {
+    switch (dbms) {
       case 'mariadb': {
+        const GlobalMariaModel = (await import('./global/maria.db')).default;
         const ndb = new GlobalMariaModel(debug);
         await ndb.setPool({
           host,
@@ -55,6 +54,8 @@ export default class DbManager {
         break;
       }
       case 'postgre': {
+        const GlobalPostgreModel = (await import('./global/postgres.db'))
+          .default;
         const ndb = new GlobalPostgreModel(debug);
         await ndb.setPool({
           host,
@@ -63,6 +64,32 @@ export default class DbManager {
           password,
           database,
         });
+        this.dbs.push({ name, db: ndb });
+        break;
+      }
+      case 'oracle': {
+        const GlobalOracleModel = (await import('./global/oracle.db')).default;
+        const ndb = new GlobalOracleModel(debug);
+        await ndb.setPool({
+          user,
+          password,
+          connectString: `${host}:${port}/${database}`,
+        });
+        this.dbs.push({ name, db: ndb });
+        break;
+      }
+      case 'mssql': {
+        const GlobalMicrosoftModel = (await import('./global/microsoft.db'))
+          .default;
+        const ndb = new GlobalMicrosoftModel(debug);
+        await ndb.setPool({
+          port,
+          user,
+          password,
+          database,
+          server: host,
+        });
+        this.dbs.push({ name, db: ndb });
         break;
       }
       default: {

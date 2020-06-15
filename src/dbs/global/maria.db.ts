@@ -4,10 +4,9 @@ import {
   SortAttribute,
   WhereAttribute,
   WhereKeyWord,
-  WhereOperator,
 } from '../../entities/querys/query';
 
-import GlobalModel from './global.db';
+import GlobalSqlModel from './global.sql';
 import mysql from 'mysql';
 
 const getPool = async (config: mysql.PoolConfig): Promise<mysql.Pool> => {
@@ -26,7 +25,7 @@ const getPool = async (config: mysql.PoolConfig): Promise<mysql.Pool> => {
   });
 };
 
-export default class GlobalMariaModel extends GlobalModel {
+export default class GlobalMariaModel extends GlobalSqlModel {
   protected pool: mysql.Pool | null = null;
   private transactionConnection: mysql.PoolConnection | null = null;
 
@@ -94,6 +93,8 @@ export default class GlobalMariaModel extends GlobalModel {
       attributes,
     )} FROM \`${tableName}\` AS default_table ${this.computeWhere(
       wheres,
+      '?',
+      false,
     )}${this.computeSort(sorts)}${
       limit !== -1 ? ` LIMIT ${offset}, ${limit}` : ''
     }`;
@@ -108,6 +109,8 @@ export default class GlobalMariaModel extends GlobalModel {
     const columns = attributes.map((a) => `\`${a.column}\` = ?`).join(', ');
     const query = `UPDATE \`${tableName}\` SET ${columns} ${this.computeWhere(
       wheres,
+      '?',
+      false,
     )}`;
     return (
       await this.query(
@@ -121,7 +124,11 @@ export default class GlobalMariaModel extends GlobalModel {
     tableName: string,
     wheres: (WhereAttribute | WhereKeyWord)[],
   ) => {
-    const query = `DELETE FROM \`${tableName}\` ${this.computeWhere(wheres)}`;
+    const query = `DELETE FROM \`${tableName}\` ${this.computeWhere(
+      wheres,
+      '?',
+      false,
+    )}`;
     return await this.query(query, this.getWhereAttributes(wheres));
   };
 
@@ -207,149 +214,5 @@ export default class GlobalMariaModel extends GlobalModel {
         return resolve(connection);
       });
     });
-  };
-
-  private getWhereAttributes = (wheres: any[]) => {
-    const newWheres: WhereAttribute[] = wheres.filter((w) =>
-      this.isWhereAttribute(w),
-    );
-    return newWheres.map((w) => w.value);
-  };
-
-  private computeAttributes = (attributes: AttrAndAlias[]) => {
-    if (!attributes.length) return ' *';
-    const query = attributes.map(
-      (a) =>
-        `${
-          a.function
-            ? `${this.computeAttributeFunction(a)}(\`${a.attribute}\`)${
-                a.alias ? ` AS ${a.alias}` : ''
-              }`
-            : `\`${a.attribute}\`${a.alias ? ` AS ${a.alias}` : ''}`
-        }`,
-    );
-    return ` ${query}`;
-  };
-
-  private computeAttributeFunction = (attribute: AttrAndAlias) => {
-    switch (attribute.function) {
-      case 'AVG': {
-        return 'AVG';
-      }
-      case 'COUNT': {
-        return 'COUNT';
-      }
-      case 'MAX': {
-        return 'MAX';
-      }
-      case 'MIN': {
-        return 'MIN';
-      }
-      case 'SUM': {
-        return 'SUM';
-      }
-      default: {
-        throw new Error(`Unknown function ${attribute.function}`);
-      }
-    }
-  };
-
-  private computeWhere = (wheres: (WhereAttribute | WhereKeyWord)[]) => {
-    let where = wheres.length ? ' WHERE ' : '';
-    wheres.forEach((w) => {
-      if (this.isWhereAttribute(w)) {
-        w = w as WhereAttribute;
-        where = `${where} ${this.computeWhereAttribute(w)}`;
-      } else {
-        w = w as WhereKeyWord;
-        where = `${where} ${this.computeWhereKeyWord(w)}`;
-      }
-    });
-    return where;
-  };
-
-  private computeSort = (sorts: SortAttribute[]) => {
-    const sortsString = sorts
-      .map((s) => `\`${s.attribute}\` ${this.computeSortMode(s)}`)
-      .join(', ');
-    return sorts.length ? ` ORDER BY ${sortsString}` : '';
-  };
-
-  private computeSortMode = (sort: SortAttribute) => {
-    switch (sort.mode) {
-      case 'ASC': {
-        return 'ASC';
-      }
-      case 'DESC': {
-        return 'DESC';
-      }
-      default: {
-        throw new Error(`Unkonwn sort mode ${sort.mode}`);
-      }
-    }
-  };
-
-  private isWhereAttribute = (where: any) => {
-    return 'operator' in where;
-  };
-
-  private computeWhereAttribute = (attribute: WhereAttribute) => {
-    switch (attribute.operator) {
-      case '<': {
-        return `\`${attribute.column}\` < ?`;
-      }
-      case '<=': {
-        return `\`${attribute.column}\` <= ?`;
-      }
-      case '<>': {
-        return `\`${attribute.column}\` <> ?`;
-      }
-      case '=': {
-        return `\`${attribute.column}\` = ?`;
-      }
-      case '>': {
-        return `\`${attribute.column}\` > ?`;
-      }
-      case '>=': {
-        return `\`${attribute.column}\` >= ?`;
-      }
-      case 'BETWEEN': {
-        return `\`${attribute.column}\` BETWEEN ? AND ?`;
-      }
-      case 'IN': {
-        return `\`${attribute.column}\` IN (${attribute.value
-          .map(() => '?')
-          .join(', ')})`;
-      }
-      case 'LIKE': {
-        return `\`${attribute.column}\` LIKE ?`;
-      }
-      default: {
-        throw new Error(`Invalid operator ${attribute.operator}`);
-      }
-    }
-  };
-
-  private computeWhereKeyWord = (keyword: WhereKeyWord) => {
-    switch (keyword.keyword) {
-      case 'AND': {
-        return ' AND ';
-      }
-      case 'OR': {
-        return ' OR ';
-      }
-      case 'NOT': {
-        return 'NOT';
-      }
-      case 'STARTGROUP': {
-        return ' ( ';
-      }
-      case 'ENDGROUP': {
-        return ' ) ';
-      }
-      default: {
-        throw new Error(`Invalid keyword ${keyword.keyword}`);
-      }
-    }
   };
 }
