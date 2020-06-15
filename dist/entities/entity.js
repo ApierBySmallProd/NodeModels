@@ -12,16 +12,16 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const entitymanager_1 = __importDefault(require("./entitymanager"));
 const create_query_1 = __importDefault(require("./querys/create.query"));
 const delete_query_1 = __importDefault(require("./querys/delete.query"));
-const entitymanager_1 = __importDefault(require("./entitymanager"));
 const find_query_1 = __importDefault(require("./querys/find.query"));
 const update_query_1 = __importDefault(require("./querys/update.query"));
 class Entity {
     constructor() {
         this.persisted = false;
         this.relations = [];
-        this.create = (dbName = null) => __awaiter(this, void 0, void 0, function* () {
+        this.create = (dbName = null, context) => __awaiter(this, void 0, void 0, function* () {
             var _a, _b;
             const base = this;
             const query = new create_query_1.default(base.constructor.tableName);
@@ -107,6 +107,7 @@ class Entity {
                 if (base.constructor.id) {
                     this.persisted = true;
                     base[base.constructor.id] = res;
+                    entitymanager_1.default.addEntity(this, context);
                     yield manyToManyQueries.reduce((prev, cur) => __awaiter(this, void 0, void 0, function* () {
                         yield prev;
                         cur.setAttribute(`${base.constructor.tableName}_id`, base[base.constructor.id]);
@@ -185,7 +186,7 @@ class Entity {
             }
             return null;
         });
-        this.delete = (dbName = null) => __awaiter(this, void 0, void 0, function* () {
+        this.delete = (dbName = null, context) => __awaiter(this, void 0, void 0, function* () {
             const base = this;
             const query = new delete_query_1.default(base.constructor.tableName);
             if (!base.constructor.id) {
@@ -194,11 +195,12 @@ class Entity {
             query.where(base.constructor.id, '=', base[base.constructor.id]);
             const res = yield query.exec(dbName);
             if (res) {
+                entitymanager_1.default.removeEntity(this, context);
                 return true;
             }
             return false;
         });
-        this.fetch = (field) => __awaiter(this, void 0, void 0, function* () {
+        this.fetch = (field, context) => __awaiter(this, void 0, void 0, function* () {
             const base = this;
             const relation = base.constructor.relations.find((r) => r.fieldName === field);
             if (relation) {
@@ -221,7 +223,7 @@ class Entity {
                                         data: relations,
                                     });
                                     base[relation.fieldName] = yield ent
-                                        .findMany()
+                                        .findMany(context)
                                         .where(ent.id, 'IN', relations.map((r) => r[`${ent.tableName}_id`]))
                                         .exec();
                                 }
@@ -233,13 +235,13 @@ class Entity {
                         }
                         case 'manytoone': {
                             if (base[`${relation.entity}_id`]) {
-                                base[field] = yield ent.findById(base[`${relation.entity}_id`]);
+                                base[field] = yield ent.findById(base[`${relation.entity}_id`], context);
                             }
                             break;
                         }
                         case 'onetomany': {
                             base[field] = yield ent
-                                .findMany()
+                                .findMany(context)
                                 .where(`${base.constructor.tableName}_id`, '=', base[base.constructor.id])
                                 .exec();
                             break;
@@ -250,28 +252,28 @@ class Entity {
             }
         });
     }
-    static findOne() {
+    static findOne(context) {
         const query = new find_query_1.default(this.tableName, (res) => __awaiter(this, void 0, void 0, function* () {
             if (res.length) {
-                return yield this.generateEntity(res[0]);
+                return yield this.generateEntity(res[0], context);
             }
             return null;
         }));
         query.limit(1);
         return query;
     }
-    static findMany() {
+    static findMany(context) {
         const query = new find_query_1.default(this.tableName, (res) => __awaiter(this, void 0, void 0, function* () {
             const result = [];
             yield res.reduce((prev, r) => __awaiter(this, void 0, void 0, function* () {
                 yield prev;
-                result.push(yield this.generateEntity(r));
+                result.push(yield this.generateEntity(r, context));
             }), Promise.resolve());
             return result;
         }));
         return query;
     }
-    static findById(id) {
+    static findById(id, context) {
         return __awaiter(this, void 0, void 0, function* () {
             if (!this.id)
                 throw new Error('No id specified');
@@ -282,7 +284,7 @@ class Entity {
             query.where(this.id, '=', id);
             const res = yield query.exec();
             if (res.length) {
-                return yield this.generateEntity(res[0]);
+                return yield this.generateEntity(res[0], context);
             }
             return null;
         });
@@ -300,7 +302,7 @@ class Entity {
         const query = new delete_query_1.default(this.tableName);
         return query;
     }
-    static generateEntity(res) {
+    static generateEntity(res, context) {
         return __awaiter(this, void 0, void 0, function* () {
             const newObj = this.create();
             newObj.persisted = true;
@@ -322,11 +324,11 @@ class Entity {
                     newObj[key] = value;
                 }
             }
-            const entity = entitymanager_1.default.findEntity(newObj.constructor.tableName, newObj[newObj.constructor.id]);
+            const entity = entitymanager_1.default.findEntity(newObj.constructor.tableName, newObj[newObj.constructor.id], context);
             if (entity) {
                 return entity;
             }
-            entitymanager_1.default.addEntity(newObj);
+            entitymanager_1.default.addEntity(newObj, context);
             yield this.relations.reduce((prev, cur) => __awaiter(this, void 0, void 0, function* () {
                 yield prev;
                 if (cur.autoFetch) {
@@ -347,7 +349,7 @@ class Entity {
                                             data: relations,
                                         });
                                         newObj[cur.fieldName] = yield ent
-                                            .findMany()
+                                            .findMany(context)
                                             .where(ent.id, 'IN', relations.map((r) => r[`${ent.tableName}_id`]))
                                             .exec();
                                     }
@@ -359,13 +361,13 @@ class Entity {
                             }
                             case 'manytoone': {
                                 if (res[`${cur.entity}_id`]) {
-                                    newObj[cur.fieldName] = yield ent.findById(res[`${cur.entity}_id`]);
+                                    newObj[cur.fieldName] = yield ent.findById(res[`${cur.entity}_id`], context);
                                 }
                                 break;
                             }
                             case 'onetomany': {
                                 newObj[cur.fieldName] = yield ent
-                                    .findMany()
+                                    .findMany(context)
                                     .where(`${this.tableName}_id`, '=', res[this.id])
                                     .exec();
                                 break;

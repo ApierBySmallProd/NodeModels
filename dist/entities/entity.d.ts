@@ -1,3 +1,4 @@
+import { Context } from './entitymanager';
 import DeleteQuery from './querys/delete.query';
 import { Field } from '../migration/types/createtable';
 import FindQuery from './querys/find.query';
@@ -13,16 +14,16 @@ export default abstract class Entity {
     static ready: boolean;
     static relations: Relationship[];
     static create: () => any;
-    static findOne(): FindQuery;
-    static findMany(): FindQuery;
-    static findById(id: any): Promise<any>;
+    static findOne(context?: Context): FindQuery;
+    static findMany(context?: Context): FindQuery;
+    static findById(id: any, context?: Context): Promise<any>;
     static deleteById(id: any): Promise<number | undefined>;
     static delete(): DeleteQuery;
     private static generateEntity;
     persisted: boolean;
     relations: any[];
-    create: (dbName?: string | null) => Promise<this | null>;
+    create: (dbName?: string | null, context?: Context | undefined) => Promise<this | null>;
     update: (dbName?: string | null) => Promise<this | null>;
-    delete: (dbName?: string | null) => Promise<boolean>;
-    fetch: (field: string) => Promise<void>;
+    delete: (dbName?: string | null, context?: Context | undefined) => Promise<boolean>;
+    fetch: (field: string, context?: Context | undefined) => Promise<void>;
 }

@@ -9,10 +9,10 @@ export declare function Table(tableName: string): <T extends {
     new (...args: any[]): {
         persisted: boolean;
         relations: any[];
-        create: (dbName?: string | null) => Promise<any | null>;
+        create: (dbName?: string | null, context?: import("../entitymanager").Context | undefined) => Promise<any | null>;
         update: (dbName?: string | null) => Promise<any | null>;
-        delete: (dbName?: string | null) => Promise<boolean>;
-        fetch: (field: string) => Promise<void>;
+        delete: (dbName?: string | null, context?: import("../entitymanager").Context | undefined) => Promise<boolean>;
+        fetch: (field: string, context?: import("../entitymanager").Context | undefined) => Promise<void>;
     };
     ready: boolean;
     create: () => any;
@@ -27,10 +27,10 @@ export declare function AutoCreateNUpdate(): <T extends {
     new (...args: any[]): {
         persisted: boolean;
         relations: any[];
-        create: (dbName?: string | null) => Promise<any | null>;
+        create: (dbName?: string | null, context?: import("../entitymanager").Context | undefined) => Promise<any | null>;
         update: (dbName?: string | null) => Promise<any | null>;
-        delete: (dbName?: string | null) => Promise<boolean>;
-        fetch: (field: string) => Promise<void>;
+        delete: (dbName?: string | null, context?: import("../entitymanager").Context | undefined) => Promise<boolean>;
+        fetch: (field: string, context?: import("../entitymanager").Context | undefined) => Promise<void>;
     };
     autoCreateNUpdate: boolean;
     tableName: string;

@@ -18,6 +18,25 @@ export default class EntityManager {
     EntityManager.initializingEntities = false;
   };
 
+  public static createContext = (): Context => {
+    let id: string;
+    do {
+      id = Math.floor(Math.random() * 10000 + 1).toString();
+    } while (EntityManager.contexts.find((c) => c.id === id));
+    const newContext: Context = {
+      id,
+      entities: [],
+    };
+    EntityManager.contexts.push(newContext);
+    return newContext;
+  };
+
+  public static closeContext = (context: Context) => {
+    EntityManager.contexts = EntityManager.contexts.filter(
+      (c) => c.id !== context.id,
+    );
+  };
+
   public static registerEntity<
     T extends { tableName: string; new (...args: any[]): Entity }
   >(entity: T) {
@@ -40,23 +59,49 @@ export default class EntityManager {
     EntityManager.manyToManyTables.push({ table1, table2, relationTable });
   };
 
-  public static addEntity = (entity: Entity) => {
-    EntityManager.allEntities.push(entity);
+  public static addEntity = (entity: Entity, context?: Context) => {
+    if (!context) {
+      context = EntityManager.contexts[0];
+    }
+    context.entities.push(entity);
   };
 
-  public static findEntity = (table: string, id: any = null) => {
+  public static findEntity = (
+    table: string,
+    id: any = null,
+    context?: Context,
+  ) => {
+    if (!context) {
+      context = EntityManager.contexts[0];
+    }
     if (id) {
-      return EntityManager.allEntities.find(
+      return context.entities.find(
         (f: any) =>
           f.constructor.tableName === table && f[f.constructor.id] === id,
       );
     }
-    return EntityManager.allEntities.filter(
+    return context.entities.filter(
       (f: any) => f.constructor.tableName === table,
     );
   };
 
-  private static allEntities: Entity[] = [];
+  public static removeEntity = (entity: Entity, context?: Context) => {
+    if (!context) {
+      context = EntityManager.contexts[0];
+    }
+    const ent = entity as any;
+    context.entities = context.entities.filter(
+      (e: any) =>
+        e.constructor.tableName === ent.constructor.tableName &&
+        e[e.constructor.id] === ent[ent.contructor.id],
+    );
+  };
+  private static contexts: Context[] = [{ entities: [], id: 'default' }];
   private static registeredEntities: any[] = [];
   private static initializingEntities = false;
+}
+
+export interface Context {
+  entities: Entity[];
+  id: string;
 }
