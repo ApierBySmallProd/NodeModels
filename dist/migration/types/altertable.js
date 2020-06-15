@@ -21,8 +21,13 @@ class AlterTable extends migrationtype_1.default {
         this.formatQuery = () => {
             const toAdd = this.addedFields.map((f) => `ALTER TABLE \`${this.tableName}\` ADD ${f.formatField()}`);
             const toRemove = this.removedFields.map((f) => `ALTER TABLE \`${this.tableName}\` DROP COLUMN \`${f}\``);
+            let fieldsConstraints = [];
+            this.addedFields.forEach((cur) => {
+                fieldsConstraints = fieldsConstraints.concat(cur.formatConstraint(this.tableName));
+            });
             return {
                 query: [...toRemove, ...toAdd],
+                constraints: fieldsConstraints,
             };
         };
         this.generateMigrationFile = (name) => {

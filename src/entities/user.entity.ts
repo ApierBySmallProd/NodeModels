@@ -4,6 +4,7 @@
 import {
   AllowNull,
   AutoIncrement,
+  ManyToMany,
   PrimaryKey,
   Unique,
 } from './decorators/property';
@@ -15,7 +16,9 @@ import {
 } from './decorators/other';
 import { BigInt, Date, Varchar } from './decorators/fieldtype';
 
+import ArticleEntity from './article.entity';
 import Entity from './entity';
+import EntityManager from './entitymanager';
 
 @Table('user') // This is the table name in which are stored our users
 @AutoCreateNUpdate()
@@ -34,15 +37,18 @@ export default class UserEntity extends Entity {
   private email: string;
   @Date()
   @AllowNull()
-  private birthDate: string;
+  private birthDate: Date;
   @NonPersistent()
   private age: number; // This attribute is not persisted in the table
+
+  @ManyToMany('article', true)
+  private articles: ArticleEntity[] = [];
 
   constructor(
     firstname: string,
     lastname: string,
     email: string,
-    birthDate: string,
+    birthDate: Date,
   ) {
     super();
     this.firstname = firstname;
@@ -51,4 +57,10 @@ export default class UserEntity extends Entity {
     this.birthDate = birthDate;
     this.age = 0; // Imagine we compute the age from the birthDate
   }
+
+  public addArticle = (article: ArticleEntity) => {
+    this.articles.push(article);
+  };
 }
+
+EntityManager.registerEntity(UserEntity);

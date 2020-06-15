@@ -22,7 +22,7 @@ export default class CreateTable extends MigrationType {
         cur.formatConstraint(this.tableName),
       );
     });
-    const query = [`CREATE TABLE ${this.tableName} (${fieldsString})`];
+    const query = [`CREATE TABLE \`${this.tableName}\` (${fieldsString})`];
     return {
       query,
       constraints: fieldsConstraints,
@@ -109,6 +109,8 @@ export class Field {
     this.type = type;
     return this;
   };
+
+  public getType = () => this.type;
 
   public allowNull = () => {
     this.null = true;
@@ -204,9 +206,9 @@ export class Field {
     */
     if (this.foreignKey) {
       constraints.push(
-        `ALTER TABLE ${tableName} ADD CONSTRAINT fk_${tableName.toLowerCase()}_${this.name.toLowerCase()} FOREIGN KEY (${
+        `ALTER TABLE \`${tableName}\` ADD CONSTRAINT fk_${tableName.toLowerCase()}_${this.name.toLowerCase()} FOREIGN KEY (${
           this.name
-        }) REFRENCES ${this.foreignKey.table}(${this.foreignKey.column})`,
+        }) REFERENCES ${this.foreignKey.table}(\`${this.foreignKey.column}\`)`,
       );
     }
     return constraints;

@@ -5,12 +5,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const dbmanager_1 = __importDefault(require("./dbs/dbmanager"));
 const entity_1 = __importDefault(require("./entities/entity"));
+const entitymanager_1 = __importDefault(require("./entities/entitymanager"));
 const maria_db_1 = __importDefault(require("./dbs/global/maria.db"));
 const migration_1 = __importDefault(require("./migration/migration"));
 const migration_manager_1 = __importDefault(require("./migration/migration.manager"));
 const postgres_db_1 = __importDefault(require("./dbs/global/postgres.db"));
 exports.default = {
     Entity: entity_1.default,
+    EntityManager: entitymanager_1.default,
     DbManager: dbmanager_1.default,
     db: {
         PG: postgres_db_1.default,
@@ -29,6 +31,8 @@ var migration_manager_2 = require("./migration/migration.manager");
 exports.MigrationManager = migration_manager_2.default;
 var migration_2 = require("./migration/migration");
 exports.Migration = migration_2.default;
+var entitymanager_2 = require("./entities/entitymanager");
+exports.EntityManager = entitymanager_2.default;
 var fieldtype_1 = require("./entities/decorators/fieldtype");
 exports.BigInt = fieldtype_1.BigInt;
 exports.Binary = fieldtype_1.Binary;
@@ -68,3 +72,6 @@ exports.Check = property_1.Check;
 exports.Default = property_1.Default;
 exports.PrimaryKey = property_1.PrimaryKey;
 exports.Unique = property_1.Unique;
+exports.ManyToMany = property_1.ManyToMany;
+exports.ManyToOne = property_1.ManyToOne;
+exports.OneToMany = property_1.OneToMany;

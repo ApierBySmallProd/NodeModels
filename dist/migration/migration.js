@@ -15,9 +15,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const altertable_1 = __importDefault(require("./types/altertable"));
 const createtable_1 = __importDefault(require("./types/createtable"));
 const droptable_1 = __importDefault(require("./types/droptable"));
+const migration_entity_1 = __importDefault(require("../entities/migration.entity"));
 const seed_1 = __importDefault(require("./types/seed"));
 class Migration {
-    constructor(migrationName, type) {
+    constructor(migrationName, type, migrations = []) {
         this.migrations = [];
         this.createTable = (name) => {
             const createTableMigration = new createtable_1.default(name);
@@ -55,6 +56,7 @@ class Migration {
                     if (cur.query && cur.query.length) {
                         yield cur.query.reduce((p, c) => __awaiter(this, void 0, void 0, function* () {
                             yield p;
+                            const res = yield db.query(`SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE='BASE TABLE'`);
                             yield db.query(c, [], true);
                         }), Promise.resolve());
                     }
@@ -77,19 +79,11 @@ class Migration {
                         }), Promise.resolve());
                     }
                 }), Promise.resolve());
-                const migrationRes = yield db.query('SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = "migration"');
-                if (!migrationRes.length) {
-                    yield db.query('CREATE TABLE migration (id int NOT NULL AUTO_INCREMENT PRIMARY KEY, name varchar(255) NOT NULL UNIQUE, migrated_at DATETIME DEFAULT NOW())');
-                }
                 if (this.type === 'up') {
-                    yield db.insert('migration', [
-                        { column: 'name', value: this.migrationName },
-                    ]);
+                    yield migration_entity_1.default.create(db, this.migrationName);
                 }
                 else {
-                    yield db.delete('migration', [
-                        { column: 'name', value: this.migrationName },
-                    ]);
+                    yield migration_entity_1.default.delete(db, this.migrationName);
                 }
                 yield db.commit();
                 console.log('\x1b[32m  → Success\x1b[0m');
@@ -102,6 +96,7 @@ class Migration {
         });
         this.migrationName = migrationName;
         this.type = type;
+        this.migrations = migrations;
     }
 }
 exports.default = Migration;

@@ -2,11 +2,17 @@
 /* There are some warnings becouse you must enable decorators in your tsconfig file */
 
 import {
+  AllowNull,
+  AutoCreateNUpdate,
+  Date,
   Entity,
   Id,
+  Int,
   NonPersistent,
   PrimaryKey,
   Table,
+  Unique,
+  Varchar,
 } from '@smallprod/models';
 
 @Table('user') // This is the table name in which are stored our users
@@ -16,11 +22,11 @@ export default class UserEntity extends Entity {
   @PrimaryKey()
   @Int()
   private id = -1; // This attribute is a primary key and is treated has the id for findById(), delete() and update()
-  @String(50)
+  @Varchar(50)
   private firstname: string;
-  @String(50)
+  @Varchar(50)
   private lastname: string;
-  @String(50)
+  @Varchar(50)
   @Unique()
   private email: string;
   @Date()

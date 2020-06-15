@@ -1,17 +1,12 @@
-import Query, { Attribute } from './query';
-
+import { Attribute } from './query';
 import DbManager from '../../dbs/dbmanager';
+import WhereQuery from './where.query';
 
-export default class UpdateQuery extends Query {
+export default class UpdateQuery extends WhereQuery {
   private attributes: Attribute[] = [];
-  private wheres: Attribute[] = [];
+
   public setAttribute = (column: string, value: any) => {
     this.attributes.push({ column, value });
-    return this;
-  };
-
-  public where = (column: string, value: any) => {
-    this.wheres.push({ column, value });
     return this;
   };
 

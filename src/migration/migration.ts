@@ -2,6 +2,7 @@ import AlterTable from './types/altertable';
 import CreateTable from './types/createtable';
 import DropTable from './types/droptable';
 import GlobalModel from '../dbs/global/global.db';
+import MigrationEntity from '../entities/migration.entity';
 import MigrationType from './types/migrationtype';
 import SeedTable from './types/seed';
 
@@ -10,9 +11,14 @@ export default class Migration {
   private migrationName: string;
   private type: 'up' | 'down';
 
-  constructor(migrationName: string, type: 'up' | 'down') {
+  constructor(
+    migrationName: string,
+    type: 'up' | 'down',
+    migrations: MigrationType[] = [],
+  ) {
     this.migrationName = migrationName;
     this.type = type;
+    this.migrations = migrations;
   }
   /**
    * Create a new table
@@ -70,6 +76,9 @@ export default class Migration {
         if (cur.query && cur.query.length) {
           await cur.query.reduce(async (p, c) => {
             await p;
+            const res = await db.query(
+              `SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE='BASE TABLE'`,
+            );
             await db.query(c, [], true);
           }, Promise.resolve());
         }
@@ -93,22 +102,10 @@ export default class Migration {
         }
       }, Promise.resolve());
       // Save the status in db
-      const migrationRes = await db.query(
-        'SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = "migration"',
-      );
-      if (!migrationRes.length) {
-        await db.query(
-          'CREATE TABLE migration (id int NOT NULL AUTO_INCREMENT PRIMARY KEY, name varchar(255) NOT NULL UNIQUE, migrated_at DATETIME DEFAULT NOW())',
-        );
-      }
       if (this.type === 'up') {
-        await db.insert('migration', [
-          { column: 'name', value: this.migrationName },
-        ]);
+        await MigrationEntity.create(db, this.migrationName);
       } else {
-        await db.delete('migration', [
-          { column: 'name', value: this.migrationName },
-        ]);
+        await MigrationEntity.delete(db, this.migrationName);
       }
       await db.commit();
       console.log('\x1b[32m  → Success\x1b[0m');

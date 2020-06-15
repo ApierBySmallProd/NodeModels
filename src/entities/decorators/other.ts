@@ -1,15 +1,14 @@
-import CreateTable from '../../migration/types/createtable';
-import DbManager from '../../dbs/dbmanager';
 import Entity from '../entity';
-import MigrationManager from '../../migration/migration.manager';
+import EntityManager from '../entitymanager';
 
 // tslint:disable-next-line: function-name
 export function Table(tableName: string) {
   return <
     T extends {
+      ready: boolean;
+      create: () => any;
       tableName: string;
       autoCreateNUpdate: boolean;
-      create: () => any;
       new (...args: any[]): Entity;
     }
   >(
@@ -18,10 +17,12 @@ export function Table(tableName: string) {
     return class extends constructor {
       constructor(...args: any[]) {
         super(...args);
-        constructor.tableName = tableName;
         constructor.create = () => new constructor();
+        constructor.tableName = tableName;
+        constructor.ready = true;
+        EntityManager.entities.push({ tableName, entity: constructor });
         if (constructor.autoCreateNUpdate) {
-          makeMigrations(constructor);
+          EntityManager.waitingEntities.push(constructor);
         }
       }
     };
@@ -44,7 +45,7 @@ export function AutoCreateNUpdate() {
         super(...args);
         constructor.autoCreateNUpdate = true;
         if (constructor.tableName) {
-          makeMigrations(constructor);
+          EntityManager.waitingEntities.push(constructor);
         }
       }
     };
@@ -54,6 +55,8 @@ export function AutoCreateNUpdate() {
 // tslint:disable-next-line: function-name
 export function NonPersistent() {
   return (target: any, key: string) => {
+    if (!target.constructor.nonPersistentColumns)
+      target.constructor.nonPersistentColumns = [];
     target.constructor.nonPersistentColumns.push(key);
   };
 }
@@ -64,16 +67,3 @@ export function Id() {
     target.constructor.id = key;
   };
 }
-
-const makeMigrations = async (constructor: any) => {
-  const manager = new MigrationManager(DbManager.get().getConfig());
-  const globalMigration = await manager.analyzeMigrations(
-    constructor.tableName,
-  );
-  const newSchema = new CreateTable(constructor.tableName);
-  newSchema.fields = constructor.columns;
-  const migration = globalMigration.compareSchema(newSchema);
-  if (migration) {
-    await manager.createMigration(migration);
-  }
-};

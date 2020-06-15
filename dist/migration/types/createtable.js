@@ -20,7 +20,7 @@ class CreateTable extends migrationtype_1.default {
             this.fields.forEach((cur) => {
                 fieldsConstraints = fieldsConstraints.concat(cur.formatConstraint(this.tableName));
             });
-            const query = [`CREATE TABLE ${this.tableName} (${fieldsString})`];
+            const query = [`CREATE TABLE \`${this.tableName}\` (${fieldsString})`];
             return {
                 query,
                 constraints: fieldsConstraints,
@@ -101,6 +101,7 @@ class Field {
             this.type = type;
             return this;
         };
+        this.getType = () => this.type;
         this.allowNull = () => {
             this.null = true;
             return this;
@@ -163,7 +164,7 @@ class Field {
         this.formatConstraint = (tableName) => {
             const constraints = [];
             if (this.foreignKey) {
-                constraints.push(`ALTER TABLE ${tableName} ADD CONSTRAINT fk_${tableName.toLowerCase()}_${this.name.toLowerCase()} FOREIGN KEY (${this.name}) REFRENCES ${this.foreignKey.table}(${this.foreignKey.column})`);
+                constraints.push(`ALTER TABLE \`${tableName}\` ADD CONSTRAINT fk_${tableName.toLowerCase()}_${this.name.toLowerCase()} FOREIGN KEY (${this.name}) REFERENCES ${this.foreignKey.table}(\`${this.foreignKey.column}\`)`);
             }
             return constraints;
         };

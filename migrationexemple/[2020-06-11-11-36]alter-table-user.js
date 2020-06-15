@@ -4,9 +4,9 @@ const Migration = require('../dist/migration/migration.js').default; // Replace 
  * @param {Migration} migration
  */
 const up = (migration) => {
-  const alter = migration.alterTable('user');
-  alter.addField('firstname', 'varchar').length(255).allowNull();
-  // alter.removeField('age'); // ! TODO fix this
+    /*const alter = migration.alterTable('user');
+      alter.addField('firstname', 'varchar').length(255).allowNull();
+      // alter.removeField('age'); // ! TODO fix this*/
 };
 
 /**
@@ -14,11 +14,12 @@ const up = (migration) => {
  * @param {Migration} migration
  */
 const down = (migration) => {
-  migration.seedTable('user').clearTable();
+    const alter = migration.alterTable('user');
+    alter.removeField('firstname');
 };
 
 module.exports = {
-  name: 'alter-table-user',
-  up,
-  down,
+    name: 'alter-table-user',
+    up,
+    down,
 };

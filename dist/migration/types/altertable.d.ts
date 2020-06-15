@@ -8,6 +8,7 @@ export default class AlterTable extends MigrationType {
     removeField: (fieldName: string) => void;
     formatQuery: () => {
         query: string[];
+        constraints: string[];
     };
     generateMigrationFile: (name: string) => string;
     getName: () => string;

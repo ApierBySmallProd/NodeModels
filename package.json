@@ -1,6 +1,6 @@
 {
     "name": "@smallprod/models",
-    "version": "4.2.0",
+    "version": "4.3.2",
     "main": "./dist/index.js",
     "types": "./dist/index.d.ts",
     "description": "Model library",

@@ -12,13 +12,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const query_1 = __importDefault(require("./query"));
 const dbmanager_1 = __importDefault(require("../../dbs/dbmanager"));
-class FindQuery extends query_1.default {
+const where_query_1 = __importDefault(require("./where.query"));
+class FindQuery extends where_query_1.default {
     constructor(tableName, afterExec) {
         super(tableName);
         this.attributes = [];
-        this.wheres = [];
         this.sorts = [];
         this.isDistinct = false;
         this.lim = -1;
@@ -31,10 +30,6 @@ class FindQuery extends query_1.default {
         this.join = (table, alias) => {
             return this;
         };
-        this.where = (column, operator, value) => {
-            this.wheres.push({ column, value, operator });
-            return this;
-        };
         this.distinct = () => {
             this.isDistinct = true;
             return this;
@@ -45,26 +40,6 @@ class FindQuery extends query_1.default {
         };
         this.addAttributes = (attr) => {
             this.attributes = this.attributes.concat(attr.map((a) => ({ attribute: a, alias: '', function: null })));
-            return this;
-        };
-        this.and = () => {
-            this.wheres.push({ keyword: 'AND' });
-            return this;
-        };
-        this.or = () => {
-            this.wheres.push({ keyword: 'OR' });
-            return this;
-        };
-        this.not = () => {
-            this.wheres.push({ keyword: 'NOT' });
-            return this;
-        };
-        this.group = () => {
-            this.wheres.push({ keyword: 'STARTGROUP' });
-            return this;
-        };
-        this.endGroup = () => {
-            this.wheres.push({ keyword: 'ENDGROUP' });
             return this;
         };
         this.sort = (attr, method = 'ASC') => {

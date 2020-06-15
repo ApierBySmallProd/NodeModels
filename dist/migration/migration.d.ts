@@ -8,7 +8,7 @@ export default class Migration {
     private migrations;
     private migrationName;
     private type;
-    constructor(migrationName: string, type: 'up' | 'down');
+    constructor(migrationName: string, type: 'up' | 'down', migrations?: MigrationType[]);
     createTable: (name: string) => CreateTable;
     dropTable: (name: string) => DropTable;
     alterTable: (name: string) => AlterTable;

@@ -34,12 +34,12 @@ export default abstract class GlobalModel {
   public abstract update(
     tableName: string,
     attributes: Attribute[],
-    wheres: Attribute[],
+    wheres: (WhereAttribute | WhereKeyWord)[],
   ): Promise<number | undefined>;
 
   public abstract delete(
     tableName: string,
-    wheres: Attribute[],
+    wheres: (WhereAttribute | WhereKeyWord)[],
   ): Promise<number | undefined>;
 
   public abstract select(

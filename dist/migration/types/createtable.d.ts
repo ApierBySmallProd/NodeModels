@@ -26,6 +26,7 @@ export declare class Field {
     private checkValue;
     constructor(name: string, type: FieldType);
     setType: (type: FieldType) => this;
+    getType: () => FieldType;
     allowNull: () => this;
     length: (len: number) => this;
     autoIncrement: () => this;

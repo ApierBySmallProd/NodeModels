@@ -8,8 +8,8 @@ export default class GlobalPostgreModel extends GlobalModel {
     query: (query: string, params?: string[] | undefined, throwErrors?: boolean) => Promise<QueryResult<any> | null>;
     insert: (tableName: string, attributes: Attribute[]) => Promise<QueryResult<any> | null>;
     select: (tableName: string, distinct: boolean, attributes: AttrAndAlias[], wheres: (WhereAttribute | WhereKeyWord)[], sorts: SortAttribute[], limit: number, offset?: number) => Promise<QueryResult<any> | null>;
-    update: (tableName: string, attributes: Attribute[], wheres: Attribute[]) => Promise<number | undefined>;
-    delete: (tableName: string, wheres: Attribute[]) => Promise<number | undefined>;
+    update: (tableName: string, attributes: Attribute[], wheres: (WhereAttribute | WhereKeyWord)[]) => Promise<number | undefined>;
+    delete: (tableName: string, wheres: (WhereAttribute | WhereKeyWord)[]) => Promise<number | undefined>;
     startTransaction: () => Promise<boolean>;
     commit: () => Promise<void>;
     rollback: () => Promise<void>;

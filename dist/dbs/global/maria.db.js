@@ -22,8 +22,10 @@ const getPool = (config) => __awaiter(void 0, void 0, void 0, function* () {
                 reject(err);
             }
             else {
-                connection.release();
-                resolve(pool);
+                connection.query('RESET QUERY CACHE', () => {
+                    connection.release();
+                    resolve(pool);
+                });
             }
         });
     });
@@ -74,26 +76,24 @@ class GlobalMariaModel extends global_db_1.default {
         });
         this.insert = (tableName, attributes) => __awaiter(this, void 0, void 0, function* () {
             var _a;
-            const columns = attributes.map((a) => a.column).join(', ');
+            const columns = attributes.map((a) => `\`${a.column}\``).join(', ');
             const params = attributes.map((a, index) => `?`).join(', ');
-            const query = `INSERT INTO ${tableName} (${columns}) VALUES (${params})`;
+            const query = `INSERT INTO \`${tableName}\` (${columns}) VALUES (${params})`;
             return (_a = (yield this.query(query, attributes.map((a) => a.value)))) === null || _a === void 0 ? void 0 : _a.insertId;
         });
         this.select = (tableName, distinct, attributes, wheres, sorts, limit, offset = 0) => __awaiter(this, void 0, void 0, function* () {
-            const query = `SELECT${distinct ? ' DISTINCT' : ''}${this.computeAttributes(attributes)} FROM ${tableName} AS default_table ${this.computeWhere(wheres)}${this.computeSort(sorts)}${limit !== -1 ? ` LIMIT ${limit}, ${offset}` : ''}`;
+            const query = `SELECT${distinct ? ' DISTINCT' : ''}${this.computeAttributes(attributes)} FROM \`${tableName}\` AS default_table ${this.computeWhere(wheres)}${this.computeSort(sorts)}${limit !== -1 ? ` LIMIT ${offset}, ${limit}` : ''}`;
             return yield this.query(query, this.getWhereAttributes(wheres));
         });
         this.update = (tableName, attributes, wheres) => __awaiter(this, void 0, void 0, function* () {
             var _b;
-            const columns = attributes.map((a) => `${a.column} = ?`).join(', ');
-            const where = wheres.map((w) => `${w.column} = ?`).join(' AND ');
-            const query = `UPDATE ${tableName} SET ${columns} ${wheres.length ? `WHERE ${where}` : ''}`;
-            return (_b = (yield this.query(query, attributes.map((a) => a.value).concat(wheres.map((w) => w.value))))) === null || _b === void 0 ? void 0 : _b.affectedRows;
+            const columns = attributes.map((a) => `\`${a.column}\` = ?`).join(', ');
+            const query = `UPDATE \`${tableName}\` SET ${columns} ${this.computeWhere(wheres)}`;
+            return (_b = (yield this.query(query, attributes.map((a) => a.value).concat(this.getWhereAttributes(wheres))))) === null || _b === void 0 ? void 0 : _b.affectedRows;
         });
         this.delete = (tableName, wheres) => __awaiter(this, void 0, void 0, function* () {
-            const where = wheres.map((w) => `${w.column} = ?`).join(' AND ');
-            const query = `DELETE FROM ${tableName} ${wheres.length ? `WHERE ${where}` : ''}`;
-            return yield this.query(query, wheres.map((w) => w.value));
+            const query = `DELETE FROM \`${tableName}\` ${this.computeWhere(wheres)}`;
+            return yield this.query(query, this.getWhereAttributes(wheres));
         });
         this.startTransaction = () => __awaiter(this, void 0, void 0, function* () {
             return new Promise((resolve, reject) => {
@@ -192,9 +192,10 @@ class GlobalMariaModel extends global_db_1.default {
         this.computeAttributes = (attributes) => {
             if (!attributes.length)
                 return ' *';
-            attributes.map((a) => `${a.function
-                ? `${this.computeAttributeFunction(a)}(${a.attribute})${a.alias ? ` AS ${a.alias}` : ''}`
-                : `${a.attribute}${a.alias ? ` AS ${a.alias}` : ''}`}`);
+            const query = attributes.map((a) => `${a.function
+                ? `${this.computeAttributeFunction(a)}(\`${a.attribute}\`)${a.alias ? ` AS ${a.alias}` : ''}`
+                : `\`${a.attribute}\`${a.alias ? ` AS ${a.alias}` : ''}`}`);
+            return ` ${query}`;
         };
         this.computeAttributeFunction = (attribute) => {
             switch (attribute.function) {
@@ -234,7 +235,7 @@ class GlobalMariaModel extends global_db_1.default {
         };
         this.computeSort = (sorts) => {
             const sortsString = sorts
-                .map((s) => `${s.attribute} ${this.computeSortMode(s)}`)
+                .map((s) => `\`${s.attribute}\` ${this.computeSortMode(s)}`)
                 .join(', ');
             return sorts.length ? ` ORDER BY ${sortsString}` : '';
         };
@@ -257,33 +258,33 @@ class GlobalMariaModel extends global_db_1.default {
         this.computeWhereAttribute = (attribute) => {
             switch (attribute.operator) {
                 case '<': {
-                    return `${attribute.column} < ?`;
+                    return `\`${attribute.column}\` < ?`;
                 }
                 case '<=': {
-                    return `${attribute.column} <= ?`;
+                    return `\`${attribute.column}\` <= ?`;
                 }
                 case '<>': {
-                    return `${attribute.column} <> ?`;
+                    return `\`${attribute.column}\` <> ?`;
                 }
                 case '=': {
-                    return `${attribute.column} = ?`;
+                    return `\`${attribute.column}\` = ?`;
                 }
                 case '>': {
-                    return `${attribute.column} > ?`;
+                    return `\`${attribute.column}\` > ?`;
                 }
                 case '>=': {
-                    return `${attribute.column} >= ?`;
+                    return `\`${attribute.column}\` >= ?`;
                 }
                 case 'BETWEEN': {
-                    return `${attribute.column} BETWEEN ? AND ?`;
+                    return `\`${attribute.column}\` BETWEEN ? AND ?`;
                 }
                 case 'IN': {
-                    return `${attribute.column} IN (${attribute.value
+                    return `\`${attribute.column}\` IN (${attribute.value
                         .map(() => '?')
                         .join(', ')})`;
                 }
                 case 'LIKE': {
-                    return `${attribute.column} LIKE ?`;
+                    return `\`${attribute.column}\` LIKE ?`;
                 }
                 default: {
                     throw new Error(`Invalid operator ${attribute.operator}`);

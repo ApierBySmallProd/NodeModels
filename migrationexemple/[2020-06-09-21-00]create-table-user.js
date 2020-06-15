@@ -5,12 +5,12 @@ const Migration = require('../dist/migration/migration').default; // Replace thi
  * @param {Migration} migration
  */
 const up = (migration) => {
-    const userTable = migration.createTable('user');
+    /*const userTable = migration.createTable('user');
 
-    userTable.addField('id', 'bigint').primary().autoIncrement();
-    userTable.addField('email', 'varchar').length(50).unique();
-    userTable.addField('createdAt', 'datetime').default('CURDATE', true);
-    userTable.addField('age', 'int').default('18').check('>=18');
+      userTable.addField('id', 'bigint').primary().autoIncrement();
+      userTable.addField('email', 'varchar').length(50).unique();
+      userTable.addField('createdAt', 'datetime').default('CURDATE', true);
+      userTable.addField('age', 'int').default('18').check('>=18');*/
 };
 
 /**

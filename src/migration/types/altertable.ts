@@ -26,9 +26,15 @@ export default class AlterTable extends MigrationType {
     const toRemove = this.removedFields.map(
       (f) => `ALTER TABLE \`${this.tableName}\` DROP COLUMN \`${f}\``,
     );
-
+    let fieldsConstraints: string[] = [];
+    this.addedFields.forEach((cur) => {
+      fieldsConstraints = fieldsConstraints.concat(
+        cur.formatConstraint(this.tableName),
+      );
+    });
     return {
       query: [...toRemove, ...toAdd],
+      constraints: fieldsConstraints,
     };
   };
 
@@ -41,7 +47,7 @@ export default class AlterTable extends MigrationType {
       file = `${file}   alter${field.generateMigrationFile()};\n`;
     });
     file = `${file}};\n\n`;
-    file = `${file}/*\n * @param {Migration} migration\n */\nconst down = (migration) => {\n    migration.dropTable('${this.tableName}');\n};\n\n`;
+    file = `${file}/*\n * @param {Migration} migration\n */\nconst down = (migration) => {\n    migration.dropTable('${this.tableName}');\n};\n\n`; // ! TODO change this to avoid errors
     file = `${file}module.exports = {\n   name: '${this.getName()}-${name}',\n    up,\n   down,\n};`;
     return file;
   };

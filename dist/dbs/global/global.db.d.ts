@@ -6,8 +6,8 @@ export default abstract class GlobalModel {
     abstract query(query: string, params?: string[], throwErrors?: boolean): Promise<any>;
     abstract setPool(config: any): Promise<void>;
     abstract insert(tableName: string, attributes: Attribute[]): Promise<any>;
-    abstract update(tableName: string, attributes: Attribute[], wheres: Attribute[]): Promise<number | undefined>;
-    abstract delete(tableName: string, wheres: Attribute[]): Promise<number | undefined>;
+    abstract update(tableName: string, attributes: Attribute[], wheres: (WhereAttribute | WhereKeyWord)[]): Promise<number | undefined>;
+    abstract delete(tableName: string, wheres: (WhereAttribute | WhereKeyWord)[]): Promise<number | undefined>;
     abstract select(tableName: string, distinct: boolean, attributes: AttrAndAlias[], wheres: (WhereAttribute | WhereKeyWord)[], sorts: SortAttribute[], limit: number, offset: number): Promise<any>;
     abstract startTransaction(): Promise<boolean>;
     abstract commit(): Promise<void>;

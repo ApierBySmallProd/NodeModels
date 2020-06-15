@@ -1,5 +1,34 @@
 # Changelog
 
+## V4.3.2
+
+### FIX
+
+- Limit and offset for MariaDb/Mysql and Postgres
+
+---
+
+## V4.3.1
+
+### FIX
+
+- Dist folder
+
+---
+
+## V4.3.0
+
+### ADD
+
+- Relations between entities
+- Date management
+
+### FIX
+
+- Down migration trouble
+
+---
+
 ## V4.2.0
 
 ### ADD

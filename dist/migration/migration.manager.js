@@ -12,67 +12,22 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const createtable_1 = __importDefault(require("./types/createtable"));
 const dbmanager_1 = __importDefault(require("../dbs/dbmanager"));
+const entitymanager_1 = __importDefault(require("../entities/entitymanager"));
 const migration_1 = __importDefault(require("./migration"));
+const migration_entity_1 = __importDefault(require("../entities/migration.entity"));
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
 class MigrationManager {
-    constructor(config) {
-        this.createMigration = (migration) => __awaiter(this, void 0, void 0, function* () {
-            const now = new Date();
-            const fileName = `[${now
-                .toISOString()
-                .replace(/T/g, '-')
-                .replace(/:/g, '-')}]${migration.getName()}.js`;
-            const nbFile = fs_1.default
-                .readdirSync(path_1.default.resolve(this.config.migrationPath))
-                .length.toString();
-            fs_1.default.writeFileSync(path_1.default.resolve(this.config.migrationPath, fileName), migration.generateMigrationFile(nbFile));
-            const migr = new migration_1.default(`${migration.getName()}-${nbFile}`, 'up');
-            const model = dbmanager_1.default.get().get();
-            if (!model) {
-                throw new Error('Database not found');
-            }
-            yield migr.execute(model);
-        });
-        this.analyzeMigrations = (tableName) => __awaiter(this, void 0, void 0, function* () {
-            const model = dbmanager_1.default.get().get();
-            if (!model) {
-                throw new Error('Database not found');
-            }
-            const migrations = (yield model.query('SELECT name FROM migration ORDER BY migrated_at ASC, id ASC')).map((m) => m.name);
-            const result = [];
-            const res = fs_1.default.readdirSync(this.config.migrationPath);
-            res.forEach((migrationFile) => {
-                const migrationPath = path_1.default.resolve(this.config.migrationPath, migrationFile);
-                const migrationRequired = require(migrationPath);
-                if (migrations.includes(migrationRequired.name)) {
-                    const migration = new migration_1.default(migrationRequired.name, 'up');
-                    migrationRequired.up(migration);
-                    const r = migration.findByTableName(tableName);
-                    r.forEach((m) => {
-                        result.push(m);
-                    });
-                }
-            });
-            if (!result.length)
-                return new createtable_1.default(tableName);
-            if (result[0].type !== 'createtable')
-                return new createtable_1.default(tableName);
-            const globalMigration = result[0];
-            for (let i = 1; i < result.length; i += 1) {
-                globalMigration.applyMigration(result[i]);
-            }
-            return globalMigration;
-        });
+    constructor() {
         this.migrate = (targetMigration, dbName) => __awaiter(this, void 0, void 0, function* () {
+            yield entitymanager_1.default.initialize();
             console.log('\x1b[33mStarting migrations\x1b[0m');
             const model = dbmanager_1.default.get().get(dbName);
             if (!model) {
                 throw new Error('Database not found');
             }
-            const migrations = (yield model.query('SELECT name FROM migration ORDER BY migrated_at ASC, id ASC')).map((m) => m.name);
+            const migrations = (yield migration_entity_1.default.getAll(model)).map((m) => m.name);
             const res = fs_1.default.readdirSync(this.config.migrationPath);
             res.sort();
             yield res.reduce((prev, migrationFile) => __awaiter(this, void 0, void 0, function* () {
@@ -89,18 +44,27 @@ class MigrationManager {
             }), Promise.resolve());
         });
         this.reset = (targetMigration, dbName) => __awaiter(this, void 0, void 0, function* () {
+            yield entitymanager_1.default.initialize();
             console.log('\x1b[33mStarting migrations\x1b[0m');
             const model = dbmanager_1.default.get().get(dbName);
             if (!model) {
                 throw new Error('Database not found');
             }
+            const migrations = (yield migration_entity_1.default.getAll(model)).map((m) => m.name);
             const res = fs_1.default.readdirSync(this.config.migrationPath);
             res.sort();
-            yield res.reduce((prev, migrationFile) => __awaiter(this, void 0, void 0, function* () {
+            yield migrations.reduce((prev, migrationName) => __awaiter(this, void 0, void 0, function* () {
                 yield prev;
-                const migrationPath = path_1.default.resolve(this.config.migrationPath, migrationFile);
-                const migrationRequired = require(migrationPath);
-                if (!targetMigration || targetMigration === migrationRequired.name) {
+                let migrationRequired = null;
+                res.forEach((migrationFile) => {
+                    const migrationPath = path_1.default.resolve(this.config.migrationPath, migrationFile);
+                    const req = require(migrationPath);
+                    if (req.name === migrationName &&
+                        (!targetMigration || targetMigration === req.name)) {
+                        migrationRequired = req;
+                    }
+                });
+                if (migrationRequired) {
                     console.log(`\x1b[35m## Migrating ${migrationRequired.name}\x1b[0m`);
                     const migration = new migration_1.default(migrationRequired.name, 'down');
                     migrationRequired.down(migration);
@@ -108,7 +72,7 @@ class MigrationManager {
                 }
             }), Promise.resolve());
         });
-        this.config = config;
+        this.config = dbmanager_1.default.get().getConfig();
     }
 }
 exports.default = MigrationManager;

@@ -1,18 +1,11 @@
-import Query, {
-  AttrAndAlias,
-  Attribute,
-  AttributeFunction,
-  SortAttribute,
-  WhereAttribute,
-  WhereKeyWord,
-  WhereOperator,
-} from './query';
+import { AttrAndAlias, AttributeFunction, SortAttribute } from './query';
 
 import DbManager from '../../dbs/dbmanager';
+import EntityManager from '../entitymanager';
+import WhereQuery from './where.query';
 
-export default class FindQuery extends Query {
+export default class FindQuery extends WhereQuery {
   private attributes: AttrAndAlias[] = [];
-  private wheres: (WhereAttribute | WhereKeyWord)[] = [];
   private sorts: SortAttribute[] = [];
   private isDistinct = false;
   private lim = -1;
@@ -34,11 +27,6 @@ export default class FindQuery extends Query {
     return this;
   };
 
-  public where = (column: string, operator: WhereOperator, value: any) => {
-    this.wheres.push({ column, value, operator });
-    return this;
-  };
-
   public distinct = () => {
     this.isDistinct = true;
     return this;
@@ -57,31 +45,6 @@ export default class FindQuery extends Query {
     this.attributes = this.attributes.concat(
       attr.map((a) => ({ attribute: a, alias: '', function: null })),
     );
-    return this;
-  };
-
-  public and = () => {
-    this.wheres.push({ keyword: 'AND' });
-    return this;
-  };
-
-  public or = () => {
-    this.wheres.push({ keyword: 'OR' });
-    return this;
-  };
-
-  public not = () => {
-    this.wheres.push({ keyword: 'NOT' });
-    return this;
-  };
-
-  public group = () => {
-    this.wheres.push({ keyword: 'STARTGROUP' });
-    return this;
-  };
-
-  public endGroup = () => {
-    this.wheres.push({ keyword: 'ENDGROUP' });
     return this;
   };
 

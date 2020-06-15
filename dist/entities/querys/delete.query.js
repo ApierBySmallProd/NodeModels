@@ -12,16 +12,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const query_1 = __importDefault(require("./query"));
 const dbmanager_1 = __importDefault(require("../../dbs/dbmanager"));
-class DeleteQuery extends query_1.default {
+const where_query_1 = __importDefault(require("./where.query"));
+class DeleteQuery extends where_query_1.default {
     constructor() {
         super(...arguments);
-        this.wheres = [];
-        this.where = (column, value) => {
-            this.wheres.push({ column, value });
-            return this;
-        };
         this.exec = (dbName = null) => __awaiter(this, void 0, void 0, function* () {
             const db = dbmanager_1.default.get().get(dbName);
             if (!db)

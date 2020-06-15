@@ -1,15 +1,8 @@
-import Query, { Attribute } from './query';
-
+import { Attribute } from './query';
 import DbManager from '../../dbs/dbmanager';
+import WhereQuery from './where.query';
 
-export default class DeleteQuery extends Query {
-  private wheres: Attribute[] = [];
-
-  public where = (column: string, value: any) => {
-    this.wheres.push({ column, value });
-    return this;
-  };
-
+export default class DeleteQuery extends WhereQuery {
   /**
    * Execute the delete query and return the number of deleted rows
    */

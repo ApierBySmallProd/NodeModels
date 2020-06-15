@@ -1,13 +1,14 @@
 import DbManager from './dbs/dbmanager';
 import Entity from './entities/entity';
+import EntityManager from './entities/entitymanager';
 import Maria from './dbs/global/maria.db';
 import Migration from './migration/migration';
 import MigrationManager from './migration/migration.manager';
 import PG from './dbs/global/postgres.db';
-import UserEntity from './entities/user.entity';
 
 export default {
   Entity,
+  EntityManager,
   DbManager,
   db: {
     PG,
@@ -23,6 +24,7 @@ export { default as Entity } from './entities/entity';
 export { default as DbManager } from './dbs/dbmanager';
 export { default as MigrationManager } from './migration/migration.manager';
 export { default as Migration } from './migration/migration';
+export { default as EntityManager } from './entities/entitymanager';
 
 /* Decorators */
 export {
@@ -66,24 +68,7 @@ export {
   Default,
   PrimaryKey,
   Unique,
+  ManyToMany,
+  ManyToOne,
+  OneToMany,
 } from './entities/decorators/property';
-
-/*
-(async () => {
-  const dbManager = DbManager.get(); // Get the database manager
-  dbManager.setConfig({ migrationPath: 'migrationexemple' });
-
-  await dbManager.add(
-    'mariadb',
-    'localhost',
-    3306,
-    'make_admin',
-    'secret',
-    'make_db',
-    '', // This is the name of the connection which is usefull if you have multiple databases
-    true,
-  ); // Add a new database connection
-  const user = new UserEntity('toto', 'doe', 'email', 'birthdate');
-  console.log(user);
-})();
-*/
