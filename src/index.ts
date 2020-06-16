@@ -23,6 +23,7 @@ export { default as FindQuery } from './entities/querys/find.query';
 export { default as CreateQuery } from './entities/querys/create.query';
 export { default as DeleteQuery } from './entities/querys/delete.query';
 export { default as UpdateQuery } from './entities/querys/update.query';
+export { withContext } from './entities/middleware';
 
 /* Decorators */
 export {

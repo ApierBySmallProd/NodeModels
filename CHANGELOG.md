@@ -1,5 +1,13 @@
 # Changelog
 
+## V4.4.5
+
+### ADD
+
+- Express middleware to handle contexts
+
+---
+
 ## V4.4.4
 
 ### ADD
