@@ -17,7 +17,7 @@ MigrationEntity.getAll = (model) => __awaiter(void 0, void 0, void 0, function* 
     return model.select('migration', false, [], [], [
         { attribute: 'migrated_at', mode: 'DESC' },
         { attribute: 'id', mode: 'DESC' },
-    ], -1, -1);
+    ], 'default_table', -1, -1);
 });
 MigrationEntity.create = (model, name) => __awaiter(void 0, void 0, void 0, function* () {
     yield MigrationEntity.checkQuery(model);

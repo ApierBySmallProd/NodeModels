@@ -81,8 +81,8 @@ class GlobalMariaModel extends global_sql_1.default {
             const query = `INSERT INTO \`${tableName}\` (${columns}) VALUES (${params})`;
             return (_a = (yield this.query(query, attributes.map((a) => a.value)))) === null || _a === void 0 ? void 0 : _a.insertId;
         });
-        this.select = (tableName, distinct, attributes, wheres, sorts, limit, offset = 0) => __awaiter(this, void 0, void 0, function* () {
-            const query = `SELECT${distinct ? ' DISTINCT' : ''}${this.computeAttributes(attributes)} FROM \`${tableName}\` AS default_table ${this.computeWhere(wheres, '?', false)}${this.computeSort(sorts)}${limit !== -1 ? ` LIMIT ${offset}, ${limit}` : ''}`;
+        this.select = (tableName, distinct, attributes, wheres, sorts, tableAlias, limit, offset = 0) => __awaiter(this, void 0, void 0, function* () {
+            const query = `SELECT${distinct ? ' DISTINCT' : ''}${this.computeAttributes(attributes)} FROM \`${tableName}\` AS ${tableAlias} ${this.computeWhere(wheres, '?', false)}${this.computeSort(sorts)}${limit !== -1 ? ` LIMIT ${offset}, ${limit}` : ''}`;
             return yield this.query(query, this.getWhereAttributes(wheres));
         });
         this.update = (tableName, attributes, wheres) => __awaiter(this, void 0, void 0, function* () {

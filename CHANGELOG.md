@@ -1,10 +1,33 @@
 # Changelog
 
-## V4.4.2
+## V4.4.4
+
+### ADD
+
+- Access to queries
+  - FinqQuery
+  - UpdateQuery
+  - CreateQuery
+  - DeleteQuery
 
 ### FIX
 
 - Modules import (now you don't have have to add modules for all dbms)
+
+---
+
+## V4.4.3
+
+### FIX
+
+- Modules import (now you don't have have to add modules for all dbms) (NOT WORKING SEE V4.4.4)
+
+---
+
+## V4.4.2
+
+### ADD
+
 - Support for Oracle Db
 - Support for MSSql
 

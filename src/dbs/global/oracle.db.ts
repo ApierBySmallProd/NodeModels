@@ -58,12 +58,13 @@ export default class GlobalOracleModel extends GlobalSqlModel {
     attributes: AttrAndAlias[],
     wheres: (WhereAttribute | WhereKeyWord)[],
     sorts: SortAttribute[],
+    tableAlias: string,
     limit: number,
     offset = 0,
   ) => {
     const query = `SELECT${distinct ? ' DISTINCT' : ''}${this.computeAttributes(
       attributes,
-    )} FROM \`${tableName}\` AS default_table ${this.computeWhere(
+    )} FROM \`${tableName}\` AS ${tableAlias} ${this.computeWhere(
       wheres,
       ':',
       true,

@@ -8,10 +8,6 @@ class WhereQuery extends query_1.default {
     constructor() {
         super(...arguments);
         this.wheres = [];
-        this.where = (column, operator, value) => {
-            this.wheres.push({ column, value, operator });
-            return this;
-        };
         this.and = () => {
             this.wheres.push({ keyword: 'AND' });
             return this;

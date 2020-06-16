@@ -1,19 +1,13 @@
 import DbManager from './dbs/dbmanager';
 import Entity from './entities/entity';
 import EntityManager from './entities/entitymanager';
-import Maria from './dbs/global/maria.db';
 import Migration from './migration/migration';
 import MigrationManager from './migration/migration.manager';
-import PG from './dbs/global/postgres.db';
 
 export default {
   Entity,
   EntityManager,
   DbManager,
-  db: {
-    PG,
-    Maria,
-  },
   migration: {
     MigrationManager,
     Migration,
@@ -25,6 +19,10 @@ export { default as DbManager } from './dbs/dbmanager';
 export { default as MigrationManager } from './migration/migration.manager';
 export { default as Migration } from './migration/migration';
 export { default as EntityManager } from './entities/entitymanager';
+export { default as FindQuery } from './entities/querys/find.query';
+export { default as CreateQuery } from './entities/querys/create.query';
+export { default as DeleteQuery } from './entities/querys/delete.query';
+export { default as UpdateQuery } from './entities/querys/update.query';
 
 /* Decorators */
 export {

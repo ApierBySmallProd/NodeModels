@@ -17,6 +17,10 @@ const where_query_1 = __importDefault(require("./where.query"));
 class DeleteQuery extends where_query_1.default {
     constructor() {
         super(...arguments);
+        this.where = (column, operator, value) => {
+            this.wheres.push({ column, value, operator });
+            return this;
+        };
         this.exec = (dbName = null) => __awaiter(this, void 0, void 0, function* () {
             const db = dbmanager_1.default.get().get(dbName);
             if (!db)

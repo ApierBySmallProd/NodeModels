@@ -26,5 +26,6 @@ import UserEntity from './entities/user.entity';
   // const foundUser = await UserEntity.findById(12); // User this to find a user in the database
 
   // await user.find().setAttributes(['id', 'email', 'age']).where('age', '=', '18') // You can make massive request if you want
+  new FindQuery('user').alias('u').join('job', 'j');
   process.exit(0);
 })();

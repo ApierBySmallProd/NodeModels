@@ -22,16 +22,26 @@ class FindQuery extends where_query_1.default {
         this.isDistinct = false;
         this.lim = -1;
         this.offset = -1;
+        this.tableAlias = 'default_table';
+        this.where = (column, operator, value) => {
+            this.wheres.push({ column, value, operator });
+            return this;
+        };
         this.limit = (limit, offset = 0) => {
             this.lim = limit;
             this.offset = offset;
             return this;
         };
         this.join = (table, alias) => {
-            return this;
+            const join = new Join(table, alias, this);
+            return join;
         };
         this.distinct = () => {
             this.isDistinct = true;
+            return this;
+        };
+        this.alias = (alias) => {
+            this.tableAlias = alias;
             return this;
         };
         this.addAttribute = (attr, alias = '', func = null) => {
@@ -50,7 +60,7 @@ class FindQuery extends where_query_1.default {
             const db = dbmanager_1.default.get().get(dbName);
             if (!db)
                 throw Error('Database not found');
-            const res = yield db.select(this.tableName, this.isDistinct, this.attributes, this.wheres, this.sorts, this.lim, this.offset);
+            const res = yield db.select(this.tableName, this.isDistinct, this.attributes, this.wheres, this.sorts, this.tableAlias, this.lim, this.offset);
             if (this.afterExec) {
                 return this.afterExec(res);
             }
@@ -60,3 +70,31 @@ class FindQuery extends where_query_1.default {
     }
 }
 exports.default = FindQuery;
+class Join extends where_query_1.default {
+    constructor(tableName, alias, query) {
+        super(tableName);
+        this.method = 'inner';
+        this.on = (column, operator, value) => {
+            this.wheres.push({ column, value, operator });
+            return this;
+        };
+        this.endJoin = () => {
+            return this.query;
+        };
+        this.left = () => {
+            this.method = 'left';
+            return this;
+        };
+        this.right = () => {
+            this.method = 'right';
+            return this;
+        };
+        this.full = () => {
+            this.method = 'full';
+            return this;
+        };
+        this.alias = alias;
+        this.query = query;
+    }
+}
+exports.Join = Join;

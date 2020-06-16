@@ -6,7 +6,7 @@ export default class GlobalMicrosoftModel extends GlobalSqlModel {
     protected transactionConnection: mssql.Transaction | null;
     query: (query: string, params?: string[] | undefined, throwErrors?: boolean) => Promise<mssql.IResult<any> | null>;
     insert: (tableName: string, attributes: Attribute[]) => Promise<mssql.IResult<any> | null>;
-    select: (tableName: string, distinct: boolean, attributes: AttrAndAlias[], wheres: (WhereAttribute | WhereKeyWord)[], sorts: SortAttribute[], limit: number, offset?: number) => Promise<mssql.IResult<any> | null>;
+    select: (tableName: string, distinct: boolean, attributes: AttrAndAlias[], wheres: (WhereAttribute | WhereKeyWord)[], sorts: SortAttribute[], tableAlias: string, limit: number, offset?: number) => Promise<mssql.IResult<any> | null>;
     update: (tableName: string, attributes: Attribute[], wheres: (WhereAttribute | WhereKeyWord)[]) => Promise<number | undefined>;
     delete: (tableName: string, wheres: (WhereAttribute | WhereKeyWord)[]) => Promise<number | undefined>;
     startTransaction: () => Promise<boolean>;

@@ -1,4 +1,9 @@
-import { AttrAndAlias, AttributeFunction, SortAttribute } from './query';
+import {
+  AttrAndAlias,
+  AttributeFunction,
+  SortAttribute,
+  WhereOperator,
+} from './query';
 
 import DbManager from '../../dbs/dbmanager';
 import EntityManager from '../entitymanager';
@@ -10,12 +15,18 @@ export default class FindQuery extends WhereQuery {
   private isDistinct = false;
   private lim = -1;
   private offset = -1;
+  private tableAlias = 'default_table';
   private afterExec: ((res: any[]) => any) | undefined;
 
   constructor(tableName: string, afterExec?: (res: any[]) => any) {
     super(tableName);
     this.afterExec = afterExec;
   }
+
+  public where = (column: string, operator: WhereOperator, value: any) => {
+    this.wheres.push({ column, value, operator });
+    return this;
+  };
 
   public limit = (limit: number, offset: number = 0) => {
     this.lim = limit;
@@ -24,11 +35,17 @@ export default class FindQuery extends WhereQuery {
   };
 
   public join = (table: string, alias: string) => {
-    return this;
+    const join = new Join(table, alias, this);
+    return join;
   };
 
   public distinct = () => {
     this.isDistinct = true;
+    return this;
+  };
+
+  public alias = (alias: string) => {
+    this.tableAlias = alias;
     return this;
   };
 
@@ -65,6 +82,7 @@ export default class FindQuery extends WhereQuery {
       this.attributes,
       this.wheres,
       this.sorts,
+      this.tableAlias,
       this.lim,
       this.offset,
     );
@@ -72,5 +90,41 @@ export default class FindQuery extends WhereQuery {
       return this.afterExec(res);
     }
     return res;
+  };
+}
+
+export class Join extends WhereQuery {
+  public alias: string;
+  public method = 'inner';
+  private query: FindQuery;
+
+  constructor(tableName: string, alias: string, query: FindQuery) {
+    super(tableName);
+    this.alias = alias;
+    this.query = query;
+  }
+
+  public on = (column: string, operator: WhereOperator, value: string) => {
+    this.wheres.push({ column, value, operator });
+    return this;
+  };
+
+  public endJoin = () => {
+    return this.query;
+  };
+
+  public left = () => {
+    this.method = 'left';
+    return this;
+  };
+
+  public right = () => {
+    this.method = 'right';
+    return this;
+  };
+
+  public full = () => {
+    this.method = 'full';
+    return this;
   };
 }

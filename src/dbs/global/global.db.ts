@@ -48,6 +48,7 @@ export default abstract class GlobalModel {
     attributes: AttrAndAlias[],
     wheres: (WhereAttribute | WhereKeyWord)[],
     sorts: SortAttribute[],
+    tableAlias: string,
     limit: number,
     offset: number,
   ): Promise<any>;

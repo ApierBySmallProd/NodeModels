@@ -12,6 +12,7 @@ export default class MigrationEntity {
         { attribute: 'migrated_at', mode: 'DESC' },
         { attribute: 'id', mode: 'DESC' },
       ],
+      'default_table',
       -1,
       -1,
     );

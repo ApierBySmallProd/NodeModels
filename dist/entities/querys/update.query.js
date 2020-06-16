@@ -18,6 +18,10 @@ class UpdateQuery extends where_query_1.default {
     constructor() {
         super(...arguments);
         this.attributes = [];
+        this.where = (column, operator, value) => {
+            this.wheres.push({ column, value, operator });
+            return this;
+        };
         this.setAttribute = (column, value) => {
             this.attributes.push({ column, value });
             return this;

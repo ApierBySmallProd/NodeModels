@@ -1,8 +1,13 @@
-import { Attribute } from './query';
+import { Attribute, WhereOperator } from './query';
+
 import DbManager from '../../dbs/dbmanager';
 import WhereQuery from './where.query';
 
 export default class DeleteQuery extends WhereQuery {
+  public where = (column: string, operator: WhereOperator, value: any) => {
+    this.wheres.push({ column, value, operator });
+    return this;
+  };
   /**
    * Execute the delete query and return the number of deleted rows
    */

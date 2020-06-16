@@ -9,6 +9,7 @@
 - Join
 - Refresh entity
 - Fix remove field error on constraint
+- Link entity to specific database
 
 ## Dbms to add
 

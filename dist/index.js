@@ -6,18 +6,12 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const dbmanager_1 = __importDefault(require("./dbs/dbmanager"));
 const entity_1 = __importDefault(require("./entities/entity"));
 const entitymanager_1 = __importDefault(require("./entities/entitymanager"));
-const maria_db_1 = __importDefault(require("./dbs/global/maria.db"));
 const migration_1 = __importDefault(require("./migration/migration"));
 const migration_manager_1 = __importDefault(require("./migration/migration.manager"));
-const postgres_db_1 = __importDefault(require("./dbs/global/postgres.db"));
 exports.default = {
     Entity: entity_1.default,
     EntityManager: entitymanager_1.default,
     DbManager: dbmanager_1.default,
-    db: {
-        PG: postgres_db_1.default,
-        Maria: maria_db_1.default,
-    },
     migration: {
         MigrationManager: migration_manager_1.default,
         Migration: migration_1.default,
@@ -33,6 +27,14 @@ var migration_2 = require("./migration/migration");
 exports.Migration = migration_2.default;
 var entitymanager_2 = require("./entities/entitymanager");
 exports.EntityManager = entitymanager_2.default;
+var find_query_1 = require("./entities/querys/find.query");
+exports.FindQuery = find_query_1.default;
+var create_query_1 = require("./entities/querys/create.query");
+exports.CreateQuery = create_query_1.default;
+var delete_query_1 = require("./entities/querys/delete.query");
+exports.DeleteQuery = delete_query_1.default;
+var update_query_1 = require("./entities/querys/update.query");
+exports.UpdateQuery = update_query_1.default;
 var fieldtype_1 = require("./entities/decorators/fieldtype");
 exports.BigInt = fieldtype_1.BigInt;
 exports.Binary = fieldtype_1.Binary;
