@@ -10,6 +10,7 @@
 - Refresh entity
 - Fix remove field error on constraint
 - Link entity to specific database
+- Remove row on seedtable
 
 ## Dbms to add
 

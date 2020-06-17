@@ -1,4 +1,5 @@
-import { DbManager } from '@smallprod/models';
+import { CreateQuery, DbManager } from '@smallprod/models';
+
 import UserEntity from './entities/user.entity';
 
 (async () => {
@@ -13,6 +14,28 @@ import UserEntity from './entities/user.entity';
     '', // This is the name of the connection which is usefull if you have multiple databases
     true,
   ); // Add a new database connection
+
+  dbManager.setConfig({ migrationPath: 'my path to migrations' });
+  const model = dbManager.get();
+  const response = await model.query('');
+  const deletedRows = await model.delete('user', [
+    { column: 'id', operator: '=', value: 12 },
+    { keyword: 'AND' },
+    { column: 'age', operator: '<', value: 18 },
+  ]);
+
+  await model.select(
+    'user',
+    true,
+    [{ attribute: 'email', alias: 'user_email', function: null }],
+    [],
+    [{ attribute: '', mode: '' }],
+    'default_table',
+    -1,
+    0,
+  );
+
+  await model.delete('user');
 
   const user = new UserEntity('John', 'Doe', 'john@doe.com', '1990-01-01');
 

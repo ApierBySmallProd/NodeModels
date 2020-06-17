@@ -1,15 +1,19 @@
-import { AutoCreateNUpdate, Id, Table } from './decorators/other';
 import {
+  AutoCreateNUpdate,
   AutoIncrement,
+  BigInt,
+  Date,
+  Entity,
+  EntityManager,
+  Id,
   ManyToMany,
   ManyToOne,
   PrimaryKey,
-} from './decorators/property';
-import { BigInt, Date, Varchar } from './decorators/fieldtype';
+  Table,
+  Varchar,
+} from '@smallprod/models';
 
 import CategoryEntity from './category.entity';
-import Entity from './entity';
-import EntityManager from './entitymanager';
 import UserEntity from './user.entity';
 
 @Table('article')
