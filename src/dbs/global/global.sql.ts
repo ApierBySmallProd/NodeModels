@@ -4,6 +4,7 @@ import {
   WhereAttribute,
   WhereKeyWord,
 } from '../../entities/querys/query';
+import { IJoin, Join } from '../../entities/querys/find.query';
 
 import GlobalModel from './global.db';
 
@@ -34,8 +35,9 @@ export default abstract class GlobalSqlModel extends GlobalModel {
     wheres: (WhereAttribute | WhereKeyWord)[],
     keyword: string,
     number: boolean,
+    name: string = 'WHERE',
   ) => {
-    let where = wheres.length ? ' WHERE ' : '';
+    let where = wheres.length ? ` ${name} ` : '';
     const alias = {
       keyword,
       number,
@@ -53,11 +55,54 @@ export default abstract class GlobalSqlModel extends GlobalModel {
     return where;
   };
 
+  protected computeJoins = (joins: IJoin[]) => {
+    let join = '';
+    joins.forEach((j) => {
+      join = `${join}${this.getJoinType(j)} \`${j.tableName}\` AS ${
+        j.alias
+      }${this.computeJoinWheres(j.wheres)} `;
+    });
+  };
+
+  protected computeGroupBy = (groups: string[]) => {
+    const group = groups.length ? ` GROUP BY ${groups.join(', ')}` : '';
+    return group;
+  };
+
   protected computeSort = (sorts: SortAttribute[]) => {
     const sortsString = sorts
       .map((s) => `\`${s.attribute}\` ${this.computeSortMode(s)}`)
       .join(', ');
     return sorts.length ? ` ORDER BY ${sortsString}` : '';
+  };
+
+  private computeJoinWheres = (wheres: (WhereAttribute | WhereKeyWord)[]) => {
+    let where = wheres.length ? ' ON ' : '';
+    wheres.forEach((w) => {
+      if (this.isWhereAttribute(w)) {
+        w = w as WhereAttribute;
+        where = `${where} ${w.column} ${w.operator} ${w.value} `;
+      } else {
+        w = w as WhereKeyWord;
+        where = `${where} ${this.computeWhereKeyWord(w)}`;
+      }
+    });
+    return where;
+  };
+
+  private getJoinType = (join: IJoin) => {
+    switch (join.method) {
+      case 'full':
+        return 'FULL JOIN';
+      case 'inner':
+        return 'INNER JOIN';
+      case 'left':
+        return 'LEFT JOIN';
+      case 'right':
+        return 'RIGHT JOIN';
+      default:
+        throw new Error(`Unknown join method ${join.method}`);
+    }
   };
 
   private computeAttributeFunction = (attribute: AttrAndAlias) => {

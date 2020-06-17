@@ -1,4 +1,10 @@
-import { CreateQuery, DbManager } from '@smallprod/models';
+import {
+  CreateQuery,
+  DbManager,
+  DeleteQuery,
+  FindQuery,
+  UpdateQuery,
+} from '@smallprod/models';
 
 import UserEntity from './entities/user.entity';
 
@@ -25,19 +31,77 @@ import UserEntity from './entities/user.entity';
   ]);
 
   await model.select(
+    'order',
+    true,
+    [
+      { attribute: 'e.lastname', alias: null, function: null },
+      { attribute: 'o.id', alias: 'numberoforders', function: 'COUNT' },
+    ],
+    [
+      { column: 'e.lastname', operator: '=', value: 'Davolio' },
+      { keyword: 'OR' },
+      { column: 'e.lastname', operator: '=', value: 'Fuller' },
+    ],
+    [],
+    'o',
+    -1,
+    0,
+    [
+      {
+        alias: 'e',
+        method: 'inner',
+        tableName: 'employee',
+        wheres: [{ column: 'o.employee_id', operator: '=', value: 'e.id' }],
+      },
+    ],
+    ['e.lastname'],
+    [{ column: 'COUNT(o.id)', operator: '>', value: 25 }],
+  );
+
+  await model.select(
     'user',
     true,
     [{ attribute: 'email', alias: 'user_email', function: null }],
     [],
-    [{ attribute: '', mode: '' }],
+    [{ attribute: '', mode: 'ASC' }],
     'default_table',
     -1,
     0,
+    [],
+    [],
+    [],
   );
 
-  await model.delete('user');
+  const updatedRows = await model.update(
+    'user',
+    [{ column: 'pseudo', value: 'JohnD' }],
+    [
+      { column: 'id', operator: '=', value: 12 },
+      { keyword: 'AND' },
+      { column: 'age', operator: '<', value: 18 },
+    ],
+  );
 
-  const user = new UserEntity('John', 'Doe', 'john@doe.com', '1990-01-01');
+  const result = await model.select(
+    'user',
+    true,
+    [],
+    [
+      { column: 'name', operator: 'LIKE', value: '%j%' },
+      { keyword: 'AND' },
+      { column: 'age', operator: '>=', value: 18 },
+    ],
+    [
+      { attribute: 'name', mode: 'ASC' },
+      { attribute: 'age', mode: 'DESC' },
+    ],
+    'default_table',
+    10,
+    0,
+    [],
+    [],
+    [],
+  );
 
   // await user.create(); // Use this to persist a new user in the database
 

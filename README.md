@@ -185,7 +185,7 @@ This method returns a promise of a number.
 
 The select function allows you to retrieve datas from your database easily and most importantly it's dbms independent.
 
-This method takes 8 arguments.
+This method takes 11 arguments.
 
 Here is an exemple:
 
@@ -199,6 +199,9 @@ const result = await model.select(
   'default_table',
   -1,
   0,
+  [],
+  [],
+  [],
 );
 ```
 
@@ -209,7 +212,8 @@ To get all the attributes just put an empty array for the third parameter.
 The where clause, (the fourth parameter) is just like the one for the **update** method.
 To sort the results, just add some sorting properties in the fifth parameter.
 To sixth attribute allows you to add an alias for the table.
-Finally you can specify limit and offset as the seventh and eighth attributes.
+Then you can specify limit and offset as the seventh and eighth attributes.
+After that we have the joins as the nineth. Finally we have the group by and having as the tenth and eleventh.
 
 Here is a more complex request:
 
@@ -233,9 +237,50 @@ const result = await model.select(
 );
 ```
 
-Currently, we do not support Join, Having or Group by but we are working on it.
+To use Join, Group by and having, here is an exemple:
 
-So that was cool but kind of complex, you can use this but there's a simple way to do it and that's what we will see next.
+```ts
+const result = await model.select(
+  'order',
+  true,
+  [
+    { attribute: 'e.lastname', alias: null, function: null },
+    { attribute: 'o.id', alias: 'numberoforders', function: 'COUNT' },
+  ],
+  [
+    { column: 'e.lastname', operator: '=', value: 'Davolio' },
+    { keyword: 'OR' },
+    { column: 'e.lastname', operator: '=', value: 'Fuller' },
+  ],
+  [],
+  'o',
+  -1,
+  0,
+  [
+    {
+      alias: 'e',
+      method: 'inner',
+      tableName: 'employee',
+      wheres: [{ column: 'o.employee_id', operator: '=', value: 'e.id' }],
+    },
+  ],
+  ['e.lastname'],
+  [{ column: 'COUNT(o.id)', operator: '>', value: 25 }],
+);
+```
+
+Here we are translating this SQL query:
+
+```sql
+SELECT e.lastname, COUNT(o.id) AS numberoforders
+FROM order o
+INNER JOIN employee e ON o.employee_id = e.id
+WHERE e.lastname = 'Davolio' OR e.lastname = 'Fuller'
+GROUP BY e.lastname
+HAVING COUNT(o.id) > 25;
+```
+
+So that was cool but kind of complex, you can use this but there's a simpler way to do it and that's what we will see next.
 
 ## Query
 
@@ -290,6 +335,9 @@ With our new object we can do some stuff:
 - distinct() to select distinct values
 - limit(limit: number, offset?: number) to limit and offset the results
 - sort(attributeName: string, mode: 'ASC' | 'DESC') to sort the results
+- join(tableName: string, alias: string): Join to join a table
+- groupBy(column: string) to group by a column
+- having(column: string, operator: string, value: any): Having to add having clause
 
 These methods are specific to the FindQuery object and are obviously chainable.
 
@@ -313,6 +361,26 @@ findQuery
   .sort('name', 'ASC')
   .sort('age', 'DESC')
   .limit(10, 0);
+```
+
+Here is a more complex exemple with join, groupBy and having
+
+```ts
+const findQuery = new FindQuery('order');
+findQuery
+  .distinct()
+  .alias('o')
+  .join('employee', 'e')
+  .on('o.employee_id', '=', 'e.id')
+  .endJoin()
+  .where('e.lastname', '=', 'Davolio')
+  .or()
+  .where('e.lastname', '=', 'Fuller')
+  .groupBy('e.lastname')
+  .having('COUNT(o.id)', '>', '25')
+  .endHaving()
+  .addAttribute('e.lastname')
+  .addAttribute('o.id', 'numberoforders', 'COUNT');
 ```
 
 Finally we can execute the query with **exec**.

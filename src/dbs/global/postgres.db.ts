@@ -5,6 +5,7 @@ import {
   WhereAttribute,
   WhereKeyWord,
 } from '../../entities/querys/query';
+import { Having, IJoin, Join } from '../../entities/querys/find.query';
 import { Pool, PoolClient, PoolConfig, QueryResult } from 'pg';
 
 import GlobalSqlModel from './global.sql';
@@ -81,17 +82,24 @@ export default class GlobalPostgreModel extends GlobalSqlModel {
     tableAlias: string,
     limit: number,
     offset = 0,
+    joins: IJoin[],
+    groups: string[],
+    havings: (WhereAttribute | WhereKeyWord)[],
   ) => {
     const query = `SELECT${distinct ? ' DISTINCT' : ''}${this.computeAttributes(
       attributes,
-    )} FROM \`${tableName}\` AS ${tableAlias} ${this.computeWhere(
-      wheres,
-      '$',
-      true,
-    )}${this.computeSort(sorts)}${
-      limit !== -1 ? ` LIMIT ${limit} OFFSET ${offset}` : ''
-    }`;
-    return await this.query(query, this.getWhereAttributes(wheres));
+    )} FROM \`${tableName}\` AS ${tableAlias} ${this.computeJoins(
+      joins,
+    )}${this.computeWhere(wheres, '$', true)}${this.computeGroupBy(
+      groups,
+    )}${this.computeWhere(havings, '?', false, 'HAVING')}${this.computeSort(
+      sorts,
+    )}${limit !== -1 ? ` LIMIT ${limit} OFFSET ${offset}` : ''}`;
+    const havingAttr = this.getWhereAttributes(havings);
+    return await this.query(
+      query,
+      havingAttr.concat(this.getWhereAttributes(wheres)),
+    );
   };
 
   public update = async (

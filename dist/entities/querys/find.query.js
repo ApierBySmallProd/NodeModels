@@ -23,6 +23,9 @@ class FindQuery extends where_query_1.default {
         this.lim = -1;
         this.offset = -1;
         this.tableAlias = 'default_table';
+        this.joins = [];
+        this.groups = [];
+        this.havings = null;
         this.where = (column, operator, value) => {
             this.wheres.push({ column, value, operator });
             return this;
@@ -34,6 +37,7 @@ class FindQuery extends where_query_1.default {
         };
         this.join = (table, alias) => {
             const join = new Join(table, alias, this);
+            this.joins.push(join);
             return join;
         };
         this.distinct = () => {
@@ -56,11 +60,20 @@ class FindQuery extends where_query_1.default {
             this.sorts.push({ attribute: attr, mode: method });
             return this;
         };
+        this.groupBy = (column) => {
+            this.groups.push(column);
+            return this;
+        };
+        this.having = (column, operator, value) => {
+            const having = new Having(this);
+            this.havings = having;
+            return having.having(column, operator, value);
+        };
         this.exec = (dbName = null) => __awaiter(this, void 0, void 0, function* () {
             const db = dbmanager_1.default.get().get(dbName);
             if (!db)
                 throw Error('Database not found');
-            const res = yield db.select(this.tableName, this.isDistinct, this.attributes, this.wheres, this.sorts, this.tableAlias, this.lim, this.offset);
+            const res = yield db.select(this.tableName, this.isDistinct, this.attributes, this.wheres, this.sorts, this.tableAlias, this.lim, this.offset, this.joins.map((j) => j.getInterface()), this.groups, this.havings ? this.havings.getWheres() : []);
             if (this.afterExec) {
                 return this.afterExec(res);
             }
@@ -93,8 +106,29 @@ class Join extends where_query_1.default {
             this.method = 'full';
             return this;
         };
+        this.getInterface = () => ({
+            alias: this.alias,
+            tableName: this.tableName,
+            method: this.method,
+            wheres: this.wheres,
+        });
         this.alias = alias;
         this.query = query;
     }
 }
 exports.Join = Join;
+class Having extends where_query_1.default {
+    constructor(query) {
+        super('');
+        this.having = (column, operator, value) => {
+            this.wheres.push({ column, value, operator });
+            return this;
+        };
+        this.endHaving = () => {
+            return this.query;
+        };
+        this.getWheres = () => this.wheres;
+        this.query = query;
+    }
+}
+exports.Having = Having;

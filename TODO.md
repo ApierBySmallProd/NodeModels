@@ -6,11 +6,13 @@
 - ~~Fetch for relations (auto and not)~~
 - ~~Date~~
 - ~~Contexts~~
-- Join
+- ~~Join~~
+- ~~Groupby, Having~~
 - Refresh entity
 - Fix remove field error on constraint
 - Link entity to specific database
 - Remove row on seedtable
+- Better migration process
 
 ## Dbms to add
 

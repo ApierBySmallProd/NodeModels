@@ -5,6 +5,7 @@ import {
   WhereAttribute,
   WhereKeyWord,
 } from '../../entities/querys/query';
+import { Having, IJoin, Join } from '../../entities/querys/find.query';
 
 import GlobalSqlModel from './global.sql';
 import oracle from 'oracledb';
@@ -61,17 +62,26 @@ export default class GlobalOracleModel extends GlobalSqlModel {
     tableAlias: string,
     limit: number,
     offset = 0,
+    joins: IJoin[],
+    groups: string[],
+    havings: (WhereAttribute | WhereKeyWord)[],
   ) => {
     const query = `SELECT${distinct ? ' DISTINCT' : ''}${this.computeAttributes(
       attributes,
-    )} FROM \`${tableName}\` AS ${tableAlias} ${this.computeWhere(
-      wheres,
-      ':',
-      true,
-    )}${this.computeSort(sorts)}${
+    )} FROM \`${tableName}\` AS ${tableAlias} ${this.computeJoins(
+      joins,
+    )}${this.computeWhere(wheres, ':', true)}${this.computeGroupBy(
+      groups,
+    )}${this.computeWhere(havings, '?', false, 'HAVING')}${this.computeSort(
+      sorts,
+    )}${
       limit !== -1 ? ` OFFSET ${offset} ROWS FETCH NEXT ${limit} ROWS ONLY` : ''
     }`;
-    return await this.query(query, this.getWhereAttributes(wheres));
+    const havingAttr = this.getWhereAttributes(havings);
+    return await this.query(
+      query,
+      havingAttr.concat(this.getWhereAttributes(wheres)),
+    );
   };
 
   public update = async (

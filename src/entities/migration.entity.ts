@@ -15,6 +15,9 @@ export default class MigrationEntity {
       'default_table',
       -1,
       -1,
+      [],
+      [],
+      [],
     );
   };
 

@@ -67,9 +67,10 @@ class GlobalPostgreModel extends global_sql_1.default {
             const query = `INSERT INTO \`${tableName}\` (${columns}) VALUES (${params}) RETURNING *`;
             return yield this.query(query, attributes.map((a) => a.value));
         });
-        this.select = (tableName, distinct, attributes, wheres, sorts, tableAlias, limit, offset = 0) => __awaiter(this, void 0, void 0, function* () {
-            const query = `SELECT${distinct ? ' DISTINCT' : ''}${this.computeAttributes(attributes)} FROM \`${tableName}\` AS ${tableAlias} ${this.computeWhere(wheres, '$', true)}${this.computeSort(sorts)}${limit !== -1 ? ` LIMIT ${limit} OFFSET ${offset}` : ''}`;
-            return yield this.query(query, this.getWhereAttributes(wheres));
+        this.select = (tableName, distinct, attributes, wheres, sorts, tableAlias, limit, offset = 0, joins, groups, havings) => __awaiter(this, void 0, void 0, function* () {
+            const query = `SELECT${distinct ? ' DISTINCT' : ''}${this.computeAttributes(attributes)} FROM \`${tableName}\` AS ${tableAlias} ${this.computeJoins(joins)}${this.computeWhere(wheres, '$', true)}${this.computeGroupBy(groups)}${this.computeWhere(havings, '?', false, 'HAVING')}${this.computeSort(sorts)}${limit !== -1 ? ` LIMIT ${limit} OFFSET ${offset}` : ''}`;
+            const havingAttr = this.getWhereAttributes(havings);
+            return yield this.query(query, havingAttr.concat(this.getWhereAttributes(wheres)));
         });
         this.update = (tableName, attributes, wheres) => __awaiter(this, void 0, void 0, function* () {
             var _a;

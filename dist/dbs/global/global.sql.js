@@ -19,8 +19,8 @@ class GlobalSqlModel extends global_db_1.default {
                 : `\`${a.attribute}\`${a.alias ? ` AS ${a.alias}` : ''}`}`);
             return ` ${query}`;
         };
-        this.computeWhere = (wheres, keyword, number) => {
-            let where = wheres.length ? ' WHERE ' : '';
+        this.computeWhere = (wheres, keyword, number, name = 'WHERE') => {
+            let where = wheres.length ? ` ${name} ` : '';
             const alias = {
                 keyword,
                 number,
@@ -38,11 +38,49 @@ class GlobalSqlModel extends global_db_1.default {
             });
             return where;
         };
+        this.computeJoins = (joins) => {
+            let join = '';
+            joins.forEach((j) => {
+                join = `${join}${this.getJoinType(j)} \`${j.tableName}\` AS ${j.alias}${this.computeJoinWheres(j.wheres)} `;
+            });
+        };
+        this.computeGroupBy = (groups) => {
+            const group = groups.length ? ` GROUP BY ${groups.join(', ')}` : '';
+            return group;
+        };
         this.computeSort = (sorts) => {
             const sortsString = sorts
                 .map((s) => `\`${s.attribute}\` ${this.computeSortMode(s)}`)
                 .join(', ');
             return sorts.length ? ` ORDER BY ${sortsString}` : '';
+        };
+        this.computeJoinWheres = (wheres) => {
+            let where = wheres.length ? ' ON ' : '';
+            wheres.forEach((w) => {
+                if (this.isWhereAttribute(w)) {
+                    w = w;
+                    where = `${where} ${w.column} ${w.operator} ${w.value} `;
+                }
+                else {
+                    w = w;
+                    where = `${where} ${this.computeWhereKeyWord(w)}`;
+                }
+            });
+            return where;
+        };
+        this.getJoinType = (join) => {
+            switch (join.method) {
+                case 'full':
+                    return 'FULL JOIN';
+                case 'inner':
+                    return 'INNER JOIN';
+                case 'left':
+                    return 'LEFT JOIN';
+                case 'right':
+                    return 'RIGHT JOIN';
+                default:
+                    throw new Error(`Unknown join method ${join.method}`);
+            }
         };
         this.computeAttributeFunction = (attribute) => {
             switch (attribute.function) {

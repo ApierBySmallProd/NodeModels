@@ -5,6 +5,7 @@ import {
   WhereAttribute,
   WhereKeyWord,
 } from '../../entities/querys/query';
+import { Having, IJoin, Join } from '../../entities/querys/find.query';
 
 import GlobalSqlModel from './global.sql';
 import mysql from 'mysql';
@@ -89,17 +90,24 @@ export default class GlobalMariaModel extends GlobalSqlModel {
     tableAlias: string,
     limit: number,
     offset = 0,
+    joins: IJoin[],
+    groups: string[],
+    havings: (WhereAttribute | WhereKeyWord)[],
   ) => {
     const query = `SELECT${distinct ? ' DISTINCT' : ''}${this.computeAttributes(
       attributes,
-    )} FROM \`${tableName}\` AS ${tableAlias} ${this.computeWhere(
-      wheres,
-      '?',
-      false,
-    )}${this.computeSort(sorts)}${
-      limit !== -1 ? ` LIMIT ${offset}, ${limit}` : ''
-    }`;
-    return await this.query(query, this.getWhereAttributes(wheres));
+    )} FROM \`${tableName}\` AS ${tableAlias} ${this.computeJoins(
+      joins,
+    )}${this.computeWhere(wheres, '?', false)}${this.computeGroupBy(
+      groups,
+    )}${this.computeWhere(havings, '?', false, 'HAVING')}${this.computeSort(
+      sorts,
+    )}${limit !== -1 ? ` LIMIT ${offset}, ${limit}` : ''}`;
+    const havingAttr = this.getWhereAttributes(havings);
+    return await this.query(
+      query,
+      havingAttr.concat(this.getWhereAttributes(wheres)),
+    );
   };
 
   public update = async (

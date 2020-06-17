@@ -1,5 +1,14 @@
 # Changelog
 
+## V4.4.6
+
+### ADD
+
+- Join in FindQuery
+- Group by and having in FindQuery
+
+---
+
 ## V4.4.5
 
 ### ADD
