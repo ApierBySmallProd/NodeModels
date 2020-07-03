@@ -1,5 +1,11 @@
 # Changelog
 
+## V4.4.7
+
+### FIX
+
+- Error on association insertion
+
 ## V4.4.6
 
 ### ADD

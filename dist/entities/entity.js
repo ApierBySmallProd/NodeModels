@@ -93,7 +93,7 @@ class Entity {
                             break;
                         case 'manytoone':
                             if (base[relation.fieldName].persisted) {
-                                query.setAttribute(`${relation.entity}_id`, base[relation.fieldName][base[relation.fieldName].constructor.id]);
+                                query.setAttribute(`${relation.fieldName}_id`, base[relation.fieldName][base[relation.fieldName].constructor.id]);
                             }
                             break;
                         case 'onetomany':

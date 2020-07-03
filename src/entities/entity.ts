@@ -260,7 +260,7 @@ export default abstract class Entity {
           case 'manytoone':
             if (base[relation.fieldName].persisted) {
               query.setAttribute(
-                `${relation.entity}_id`,
+                `${relation.fieldName}_id`,
                 base[relation.fieldName][
                   base[relation.fieldName].constructor.id
                 ],

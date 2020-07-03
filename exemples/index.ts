@@ -103,6 +103,20 @@ import UserEntity from './entities/user.entity';
     [],
   );
 
+  new FindQuery('order')
+    .alias('o')
+    .join('employee', 'e')
+    .on('o.employee_id', '=', 'e.id')
+    .endJoin()
+    .where('e.lastname', '=', 'Davolio')
+    .or()
+    .where('e.lastname', '=', 'Fuller')
+    .groupBy('e.lastname')
+    .having('COUNT(o.id)', '>', '25')
+    .endHaving()
+    .addAttribute('e.lastname')
+    .addAttribute('o.id', 'numberoforders', 'COUNT');
+
   // await user.create(); // Use this to persist a new user in the database
 
   // user.setEmail('pablo_mo@orange.fr');

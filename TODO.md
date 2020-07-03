@@ -8,11 +8,11 @@
 - ~~Contexts~~
 - ~~Join~~
 - ~~Groupby, Having~~
-- Refresh entity
-- Fix remove field error on constraint
-- Link entity to specific database
-- Remove row on seedtable
-- Better migration process
+- Refresh entity (hard)
+- Fix remove field error on constraint (very hard)
+- Link entity to specific database (hard)
+- Remove row on seedtable (easy)
+- Better migration process (hard)
 
 ## Dbms to add
 
