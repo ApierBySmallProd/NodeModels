@@ -27,19 +27,19 @@ class Entity {
             const query = new create_query_1.default(base.constructor.tableName);
             const nonPersistentColumns = (_a = base.constructor.nonPersistentColumns) !== null && _a !== void 0 ? _a : [];
             const primaryKeys = (_b = base.constructor.primaryKeys) !== null && _b !== void 0 ? _b : [];
-            for (const [key, value] of Object.entries(this)) {
-                if (!nonPersistentColumns.includes(key) &&
-                    !primaryKeys.includes(key) &&
-                    !(base[key] instanceof Array) &&
-                    typeof base[key] !== 'function' &&
-                    key !== 'persisted') {
-                    if (typeof base[key] !== 'object' || typeof base[key] === null) {
-                        query.setAttribute(key, value);
+            let column;
+            for (column of base.constructor.columns) {
+                if (!primaryKeys.includes(column.name) &&
+                    !(base[column.name] instanceof Array) &&
+                    typeof base[column.name] !== 'function') {
+                    if (typeof base[column.name] !== 'object' ||
+                        typeof base[column.name] === null) {
+                        query.setAttribute(column.name, base[column.name]);
                     }
-                    else if (base[key] instanceof Date) {
-                        const field = base.constructor.columns.find((f) => f.name === key);
+                    else if (base[column.name] instanceof Date) {
+                        const field = base.constructor.columns.find((f) => f.name === column.name);
                         if (field) {
-                            const d = value;
+                            const d = base[column.name];
                             let formattedD = '';
                             switch (field.getType()) {
                                 case 'date': {
@@ -63,7 +63,7 @@ class Entity {
                                 }
                             }
                             if (formattedD) {
-                                query.setAttribute(key, formattedD);
+                                query.setAttribute(column.name, formattedD);
                             }
                         }
                     }
@@ -124,14 +124,46 @@ class Entity {
             const query = new update_query_1.default(base.constructor.tableName);
             const nonPersistentColumns = (_c = base.constructor.nonPersistentColumns) !== null && _c !== void 0 ? _c : [];
             const primaryKeys = (_d = base.constructor.primaryKeys) !== null && _d !== void 0 ? _d : [];
-            for (const [key, value] of Object.entries(this)) {
-                if (!nonPersistentColumns.includes(key) &&
-                    !primaryKeys.includes(key) &&
-                    !(base[key] instanceof Array) &&
-                    (typeof base[key] !== 'object' || typeof base[key] === null) &&
-                    typeof base[key] !== 'function' &&
-                    key !== 'persisted') {
-                    query.setAttribute(key, value);
+            let column;
+            for (column of base.constructor.columns) {
+                if (!primaryKeys.includes(column.name) &&
+                    !(base[column.name] instanceof Array) &&
+                    typeof base[column.name] !== 'function') {
+                    if (typeof base[column.name] !== 'object' ||
+                        typeof base[column.name] === null) {
+                        query.setAttribute(column.name, base[column.name]);
+                    }
+                    else if (base[column.name] instanceof Date) {
+                        const field = base.constructor.columns.find((f) => f.name === column.name);
+                        if (field) {
+                            const d = base[column.name];
+                            let formattedD = '';
+                            switch (field.getType()) {
+                                case 'date': {
+                                    formattedD = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+                                    break;
+                                }
+                                case 'datetime': {
+                                    formattedD = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()} ${d.getHours()}:${d.getMinutes()}:${d.getSeconds()}`;
+                                    break;
+                                }
+                                case 'timestamp': {
+                                    formattedD = d.getTime().toString();
+                                    break;
+                                }
+                                case 'time': {
+                                    formattedD = `${d.getHours()}:${d.getMinutes()}:${d.getSeconds()}`;
+                                    break;
+                                }
+                                default: {
+                                    formattedD = '';
+                                }
+                            }
+                            if (formattedD) {
+                                query.setAttribute(column.name, formattedD);
+                            }
+                        }
+                    }
                 }
             }
             if (base.constructor.id) {
@@ -171,7 +203,7 @@ class Entity {
                         }
                         case 'manytoone':
                             if (base[relation.fieldName].persisted) {
-                                query.setAttribute(`${relation.entity}_id`, base[relation.fieldName][base[relation.fieldName].constructor.id]);
+                                query.setAttribute(`${relation.fieldName}_id`, base[relation.fieldName][base[relation.fieldName].constructor.id]);
                             }
                             break;
                         case 'onetomany':
@@ -360,8 +392,8 @@ class Entity {
                                 break;
                             }
                             case 'manytoone': {
-                                if (res[`${cur.entity}_id`]) {
-                                    newObj[cur.fieldName] = yield ent.findById(res[`${cur.entity}_id`], context);
+                                if (res[`${cur.fieldName}_id`]) {
+                                    newObj[cur.fieldName] = yield ent.findById(res[`${cur.fieldName}_id`], context);
                                 }
                                 break;
                             }

@@ -15,6 +15,7 @@ import {
 
 import CategoryEntity from './category.entity';
 import UserEntity from './user.entity';
+import { Field } from '@smallprod/models/migration/types/createtable';
 
 @Table('article')
 @AutoCreateNUpdate()
@@ -23,6 +24,14 @@ export default class ArticleEntity extends Entity {
   @PrimaryKey()
   @BigInt()
   @AutoIncrement()
+  @FieldName('article_id')
+  @Field({
+    name: 'article_id',
+    type: 'BigInt',
+    primary: true,
+    autoIncrement: true,
+    id: true,
+  })
   private id = 0;
 
   @Varchar(50)

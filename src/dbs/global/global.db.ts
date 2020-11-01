@@ -5,7 +5,8 @@ import {
   WhereAttribute,
   WhereKeyWord,
 } from '../../entities/querys/query';
-import { Having, IJoin } from '../../entities/querys/find.query';
+
+import { IJoin } from '../../entities/querys/find.query';
 
 export default abstract class GlobalModel {
   public static debug: boolean | undefined;

@@ -43,6 +43,7 @@ class GlobalSqlModel extends global_db_1.default {
             joins.forEach((j) => {
                 join = `${join}${this.getJoinType(j)} \`${j.tableName}\` AS ${j.alias}${this.computeJoinWheres(j.wheres)} `;
             });
+            return join;
         };
         this.computeGroupBy = (groups) => {
             const group = groups.length ? ` GROUP BY ${groups.join(', ')}` : '';

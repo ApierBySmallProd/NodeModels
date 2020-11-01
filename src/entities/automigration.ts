@@ -1,8 +1,8 @@
-import CreateTable, { Field } from '../migration/types/createtable';
-
 import AlterTable from '../migration/types/altertable';
+import CreateTable from '../migration/types/createtable';
 import DbManager from '../dbs/dbmanager';
 import EntityManager from './entitymanager';
+import FieldEntity from './field.entity';
 import Migration from '../migration/migration';
 import MigrationEntity from './migration.entity';
 import MigrationType from '../migration/types/migrationtype';
@@ -12,7 +12,7 @@ import path from 'path';
 
 export const makeMigrations = async (constructor: any) => {
   let relationship: Relationship;
-  const relationFields: Field[] = [];
+  const relationFields: FieldEntity[] = [];
   const manyToMany = [];
   if (!constructor.relations) constructor.relations = [];
   for (relationship of constructor.relations) {
@@ -25,19 +25,19 @@ export const makeMigrations = async (constructor: any) => {
         relationEntity.entity.ready &&
         relationEntity.entity.initialized
       ) {
-        const relationId: Field = relationEntity.entity.columns.find(
-          (f: Field) => f.name === relationEntity.entity.id,
+        const relationId: FieldEntity = relationEntity.entity.columns.find(
+          (f: FieldEntity) => f.key === relationEntity.entity.id,
         );
         if (!relationId) {
           throw Error(`Unknown id`);
         }
-        const field = new Field(
+        const field = new FieldEntity(
           `${relationship.fieldName}_id`,
-          relationId.getType(),
+          relationId.type,
         );
         field.foreign(
           relationEntity.entity.tableName,
-          relationEntity.entity.id,
+          relationEntity.entity.id.fieldName,
         );
         relationFields.push(field);
       } else {
@@ -46,31 +46,31 @@ export const makeMigrations = async (constructor: any) => {
     } else if (relationship.type === 'manytomany') {
       if (relationEntity && relationEntity.entity.ready) {
         if (relationEntity.entity.initialized) {
-          const relationId: Field = relationEntity.entity.columns.find(
-            (f: Field) => f.name === relationEntity.entity.id,
+          const relationId: FieldEntity = relationEntity.entity.columns.find(
+            (f: FieldEntity) => f.key === relationEntity.entity.id.key,
           );
           if (!relationId) {
             throw Error(`Unknown id`);
           }
-          const field = new Field(
+          const field = new FieldEntity(
             `${relationEntity.entity.tableName}_id`,
-            relationId.getType(),
+            relationId.type,
           );
           field.foreign(
             relationEntity.entity.tableName,
-            relationEntity.entity.id,
+            relationEntity.entity.id.fieldName,
           );
-          const myId: Field = constructor.columns.find(
-            (f: Field) => f.name === constructor.id,
+          const myId: FieldEntity = constructor.columns.find(
+            (f: FieldEntity) => f.key === constructor.id.key,
           );
           if (!myId) {
             throw Error(`Unknown id`);
           }
-          const otherfield = new Field(
+          const otherfield = new FieldEntity(
             `${constructor.tableName}_id`,
-            myId.getType(),
+            myId.type,
           );
-          otherfield.foreign(constructor.tableName, constructor.id);
+          otherfield.foreign(constructor.tableName, constructor.id.fieldName);
           manyToMany.push({
             name: `relation_${constructor.tableName}_${relationEntity.entity.tableName}`,
             fields: [field, otherfield],
@@ -153,10 +153,12 @@ const createMigration = async (migration: CreateTable | AlterTable) => {
   await migr.execute(model);
 };
 
-const checkAndMigrate = async (tableName: string, columns: Field[]) => {
+const checkAndMigrate = async (tableName: string, columns: FieldEntity[]) => {
   const globalMigration = await analyzeMigrations(tableName);
   const newSchema = new CreateTable(tableName);
-  newSchema.fields = columns;
+  newSchema.fields = columns.map((field: FieldEntity) =>
+    field.convertToMigrationField(),
+  );
   const migration = globalMigration.compareSchema(newSchema);
   if (migration) {
     await createMigration(migration);

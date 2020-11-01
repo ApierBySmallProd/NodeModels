@@ -4,9 +4,9 @@ import {
   WhereAttribute,
   WhereKeyWord,
 } from '../../entities/querys/query';
-import { IJoin, Join } from '../../entities/querys/find.query';
 
 import GlobalModel from './global.db';
+import { IJoin } from '../../entities/querys/find.query';
 
 export default abstract class GlobalSqlModel extends GlobalModel {
   protected getWhereAttributes = (wheres: any[]) => {
@@ -62,6 +62,7 @@ export default abstract class GlobalSqlModel extends GlobalModel {
         j.alias
       }${this.computeJoinWheres(j.wheres)} `;
     });
+    return join;
   };
 
   protected computeGroupBy = (groups: string[]) => {

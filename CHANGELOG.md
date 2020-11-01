@@ -1,10 +1,44 @@
 # Changelog
 
+## V4.4.11
+
+### FIX
+
+- Error on association update
+
+---
+
+## V4.4.10
+
+### FIX
+
+- Insert and update of non wanted fields
+
+---
+
+## V4.4.9
+
+### FIX
+
+- Fetch relations troubles
+
+---
+
+## V4.4.8
+
+### FIX
+
+- Join undefined error
+
+---
+
 ## V4.4.7
 
 ### FIX
 
 - Error on association insertion
+
+---
 
 ## V4.4.6
 

@@ -1,5 +1,7 @@
 import Entity from '../entity';
 import EntityManager from '../entitymanager';
+import FieldEntity from '../field.entity';
+import { getField } from './utils';
 
 // tslint:disable-next-line: function-name
 export function Table(tableName: string) {
@@ -64,6 +66,13 @@ export function NonPersistent() {
 // tslint:disable-next-line: function-name
 export function Id() {
   return (target: any, key: string) => {
-    target.constructor.id = key;
+    const field: FieldEntity = getField(target, key);
+    if (target.constructor.id) {
+      console.error(
+        `The entity ${target.constructor.name} has multiple id! This is not allowed!`,
+      );
+    } else {
+      target.constructor.id = field;
+    }
   };
 }

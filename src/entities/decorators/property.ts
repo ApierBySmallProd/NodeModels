@@ -2,6 +2,14 @@ import { Relationship } from '../types';
 import { getField } from './utils';
 
 // tslint:disable-next-line: function-name
+export function FieldName(name: string) {
+  return (target: any, key: string) => {
+    const field = getField(target, key);
+    field.name(name);
+  };
+}
+
+// tslint:disable-next-line: function-name
 export function Unique() {
   return (target: any, key: string) => {
     const field = getField(target, key);

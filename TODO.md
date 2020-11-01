@@ -13,6 +13,8 @@
 - Link entity to specific database (hard)
 - Remove row on seedtable (easy)
 - Better migration process (hard)
+- ~~Set field name~~
+- Tests (boring)
 
 ## Dbms to add
 
@@ -20,12 +22,12 @@
 - ~~MySql~~
 - ~~MSSql~~
 - ~~PostgreSql~~
-- MongoDb
+- MongoDb (priority high)
 - Db2
-- ElasticSearch
+- ElasticSearch (priority high)
 - Microsoft Access
-- SQLite
-- Cassandra
+- SQLite (priority high)
+- Cassandra (priority high)
 - Splunk
 - ~~MariaDb~~
 - Teradata

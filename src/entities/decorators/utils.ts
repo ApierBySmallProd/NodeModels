@@ -1,10 +1,11 @@
-import { Field } from '../../migration/types/createtable';
-
-export function getField(target: any, key: string) {
+import FieldEntity from '../field.entity';
+export function getField(target: any, key: string): FieldEntity {
   if (!target.constructor.columns) target.constructor.columns = [];
-  let field = target.constructor.columns.find((f: Field) => f.name === key);
+  let field = target.constructor.columns.find(
+    (f: FieldEntity) => f.key === key,
+  );
   if (!field) {
-    field = new Field(key, 'tinyint');
+    field = new FieldEntity(key, 'tinyint');
     target.constructor.columns.push(field);
   }
   return field;
