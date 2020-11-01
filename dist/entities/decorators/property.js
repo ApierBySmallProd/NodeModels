@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.ManyToMany = exports.OneToMany = exports.ManyToOne = exports.Check = exports.Default = exports.PrimaryKey = exports.AutoIncrement = exports.AllowNull = exports.Unique = void 0;
 const utils_1 = require("./utils");
 function Unique() {
     return (target, key) => {

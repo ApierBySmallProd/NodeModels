@@ -12,6 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.Having = exports.Join = void 0;
 const dbmanager_1 = __importDefault(require("../../dbs/dbmanager"));
 const where_query_1 = __importDefault(require("./where.query"));
 class FindQuery extends where_query_1.default {

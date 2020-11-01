@@ -1,4 +1,4 @@
-import { WhereAttribute, WhereKeyWord, WhereOperator } from './query';
+import { AttributeFunction, WhereAttribute, WhereKeyWord, WhereOperator } from './query';
 import WhereQuery from './where.query';
 export default class FindQuery extends WhereQuery {
     private attributes;
@@ -17,9 +17,9 @@ export default class FindQuery extends WhereQuery {
     join: (table: string, alias: string) => Join;
     distinct: () => this;
     alias: (alias: string) => this;
-    addAttribute: (attr: string, alias?: string, func?: "MIN" | "MAX" | "COUNT" | "AVG" | "SUM" | null) => this;
+    addAttribute: (attr: string, alias?: string, func?: AttributeFunction | null) => this;
     addAttributes: (attr: string[]) => this;
-    sort: (attr: string, method?: "ASC" | "DESC") => this;
+    sort: (attr: string, method?: 'ASC' | 'DESC') => this;
     groupBy: (column: string) => this;
     having: (column: string, operator: WhereOperator, value: string) => Having;
     exec: (dbName?: string | null) => Promise<any>;

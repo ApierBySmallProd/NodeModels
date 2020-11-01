@@ -3,6 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.SeedRow = void 0;
 const migrationtype_1 = __importDefault(require("./migrationtype"));
 class SeedTable extends migrationtype_1.default {
     constructor(tableName) {

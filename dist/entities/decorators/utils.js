@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.getField = void 0;
 const createtable_1 = require("../../migration/types/createtable");
 function getField(target, key) {
     if (!target.constructor.columns)

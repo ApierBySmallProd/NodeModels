@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.LongText = exports.Text = exports.TinyText = exports.LongBlob = exports.MediumBlob = exports.Blob = exports.TinyBlob = exports.VarBinary = exports.Binary = exports.Varchar = exports.Char = exports.Year = exports.Timestamp = exports.DateTime = exports.Time = exports.Date = exports.Bit = exports.Double = exports.Float = exports.Decimal = exports.BigInt = exports.Int = exports.MediumInt = exports.SmallInt = exports.Bool = exports.Tinyint = void 0;
 const utils_1 = require("./utils");
 function Tinyint() {
     return (target, key) => {

@@ -3,6 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.Field = void 0;
 const altertable_1 = __importDefault(require("./altertable"));
 const migrationtype_1 = __importDefault(require("./migrationtype"));
 class CreateTable extends migrationtype_1.default {
