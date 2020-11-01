@@ -11,12 +11,21 @@ export default class FieldEntity {
   public checkConstraint: string | null = null;
   public defaultConstraint: DefaultValue | null = null;
   public foreignKey: ForeignKey | null = null;
+  public fieldLength = 0;
 
   constructor(key: string, type: FieldType) {
     this.key = key;
     this.type = type;
     this.fieldName = key;
   }
+
+  public length = (length: number) => {
+    this.fieldLength = length;
+  };
+
+  public setType = (type: FieldType) => {
+    this.type = type;
+  };
 
   public name = (name: string) => {
     this.fieldName = name;
@@ -53,6 +62,7 @@ export default class FieldEntity {
   public convertToMigrationField = (): Field => {
     const field = new Field(this.fieldName, this.type);
 
+    if (this.fieldLength) field.length(this.fieldLength);
     if (this.isUnique) field.unique();
     if (this.isAutoIncremented) field.autoIncrement();
     if (this.isNullAllowed) field.allowNull();

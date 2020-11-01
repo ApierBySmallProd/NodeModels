@@ -1,6 +1,6 @@
 import { AttrAndAlias, SortAttribute, WhereAttribute, WhereKeyWord } from '../../entities/querys/query';
-import { IJoin } from '../../entities/querys/find.query';
 import GlobalModel from './global.db';
+import { IJoin } from '../../entities/querys/find.query';
 export default abstract class GlobalSqlModel extends GlobalModel {
     protected getWhereAttributes: (wheres: any[]) => any[];
     protected computeAttributes: (attributes: AttrAndAlias[]) => string;

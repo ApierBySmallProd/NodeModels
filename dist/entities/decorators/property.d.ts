@@ -1,3 +1,4 @@
+export declare function FieldName(name: string): (target: any, key: string) => void;
 export declare function Unique(): (target: any, key: string) => void;
 export declare function AllowNull(): (target: any, key: string) => void;
 export declare function AutoIncrement(): (target: any, key: string) => void;

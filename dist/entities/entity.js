@@ -29,19 +29,19 @@ class Entity {
             const primaryKeys = (_b = base.constructor.primaryKeys) !== null && _b !== void 0 ? _b : [];
             let column;
             for (column of base.constructor.columns) {
-                if (!primaryKeys.includes(column.name) &&
-                    !(base[column.name] instanceof Array) &&
-                    typeof base[column.name] !== 'function') {
-                    if (typeof base[column.name] !== 'object' ||
-                        typeof base[column.name] === null) {
-                        query.setAttribute(column.name, base[column.name]);
+                if (!primaryKeys.includes(column.key) &&
+                    !(base[column.key] instanceof Array) &&
+                    typeof base[column.key] !== 'function') {
+                    if (typeof base[column.key] !== 'object' ||
+                        typeof base[column.key] === null) {
+                        query.setAttribute(column.fieldName, base[column.key]);
                     }
-                    else if (base[column.name] instanceof Date) {
+                    else if (base[column.key] instanceof Date) {
                         const field = base.constructor.columns.find((f) => f.name === column.name);
                         if (field) {
-                            const d = base[column.name];
+                            const d = base[column.key];
                             let formattedD = '';
-                            switch (field.getType()) {
+                            switch (field.type) {
                                 case 'date': {
                                     formattedD = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
                                     break;
@@ -63,7 +63,7 @@ class Entity {
                                 }
                             }
                             if (formattedD) {
-                                query.setAttribute(column.name, formattedD);
+                                query.setAttribute(column.fieldName, formattedD);
                             }
                         }
                     }
@@ -83,9 +83,9 @@ class Entity {
                             if (relationTable) {
                                 base[relation.fieldName].forEach((elem) => {
                                     if (elem.persisted &&
-                                        !relData.includes(elem[elem.constructor.id])) {
+                                        !relData.includes(elem[elem.constructor.id.key])) {
                                         const manyToManyQuery = new create_query_1.default(relationTable.relationTable);
-                                        manyToManyQuery.setAttribute(`${elem.constructor.tableName}_id`, elem[elem.constructor.id]);
+                                        manyToManyQuery.setAttribute(`${elem.constructor.tableName}_id`, elem[elem.constructor.id.key]);
                                         manyToManyQueries.push(manyToManyQuery);
                                     }
                                 });
@@ -93,7 +93,7 @@ class Entity {
                             break;
                         case 'manytoone':
                             if (base[relation.fieldName].persisted) {
-                                query.setAttribute(`${relation.fieldName}_id`, base[relation.fieldName][base[relation.fieldName].constructor.id]);
+                                query.setAttribute(`${relation.fieldName}_id`, base[relation.fieldName][base[relation.fieldName].constructor.id.key]);
                             }
                             break;
                         case 'onetomany':
@@ -106,11 +106,11 @@ class Entity {
             if (res) {
                 if (base.constructor.id) {
                     this.persisted = true;
-                    base[base.constructor.id] = res;
+                    base[base.constructor.id.key] = res;
                     entitymanager_1.default.addEntity(this, context);
                     yield manyToManyQueries.reduce((prev, cur) => __awaiter(this, void 0, void 0, function* () {
                         yield prev;
-                        cur.setAttribute(`${base.constructor.tableName}_id`, base[base.constructor.id]);
+                        cur.setAttribute(`${base.constructor.tableName}_id`, base[base.constructor.id.key]);
                         yield cur.exec();
                     }), Promise.resolve());
                 }
@@ -126,19 +126,19 @@ class Entity {
             const primaryKeys = (_d = base.constructor.primaryKeys) !== null && _d !== void 0 ? _d : [];
             let column;
             for (column of base.constructor.columns) {
-                if (!primaryKeys.includes(column.name) &&
-                    !(base[column.name] instanceof Array) &&
-                    typeof base[column.name] !== 'function') {
-                    if (typeof base[column.name] !== 'object' ||
-                        typeof base[column.name] === null) {
-                        query.setAttribute(column.name, base[column.name]);
+                if (!primaryKeys.includes(column.key) &&
+                    !(base[column.key] instanceof Array) &&
+                    typeof base[column.key] !== 'function') {
+                    if (typeof base[column.key] !== 'object' ||
+                        typeof base[column.key] === null) {
+                        query.setAttribute(column.fieldName, base[column.key]);
                     }
-                    else if (base[column.name] instanceof Date) {
-                        const field = base.constructor.columns.find((f) => f.name === column.name);
+                    else if (base[column.key] instanceof Date) {
+                        const field = base.constructor.columns.find((f) => f.key === column.key);
                         if (field) {
-                            const d = base[column.name];
+                            const d = base[column.key];
                             let formattedD = '';
-                            switch (field.getType()) {
+                            switch (field.type) {
                                 case 'date': {
                                     formattedD = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
                                     break;
@@ -160,14 +160,14 @@ class Entity {
                                 }
                             }
                             if (formattedD) {
-                                query.setAttribute(column.name, formattedD);
+                                query.setAttribute(column.fieldName, formattedD);
                             }
                         }
                     }
                 }
             }
             if (base.constructor.id) {
-                query.where(base.constructor.id, '=', base[base.constructor.id]);
+                query.where(base.constructor.id.fieldName, '=', base[base.constructor.id.key]);
             }
             else {
                 throw new Error('No specified id');
@@ -191,10 +191,10 @@ class Entity {
                                 yield base[relation.fieldName].reduce((previous, elem) => __awaiter(this, void 0, void 0, function* () {
                                     yield previous;
                                     if (elem.persisted &&
-                                        !relData.includes(elem[elem.constructor.id])) {
+                                        !relData.includes(elem[elem.constructor.id.key])) {
                                         const manyToManyQuery = new create_query_1.default(relationTable.relationTable);
-                                        manyToManyQuery.setAttribute(`${elem.constructor.tableName}_id`, elem[elem.constructor.id]);
-                                        manyToManyQuery.setAttribute(`${base.constructor.tableName}_id`, base[base.constructor.id]);
+                                        manyToManyQuery.setAttribute(`${elem.constructor.tableName}_id`, elem[elem.constructor.id.key]);
+                                        manyToManyQuery.setAttribute(`${base.constructor.tableName}_id`, base[base.constructor.id.key]);
                                         yield manyToManyQuery.exec();
                                     }
                                 }), Promise.resolve());
@@ -203,7 +203,7 @@ class Entity {
                         }
                         case 'manytoone':
                             if (base[relation.fieldName].persisted) {
-                                query.setAttribute(`${relation.fieldName}_id`, base[relation.fieldName][base[relation.fieldName].constructor.id]);
+                                query.setAttribute(`${relation.fieldName}_id`, base[relation.fieldName][base[relation.fieldName].constructor.id.key]);
                             }
                             break;
                         case 'onetomany':
@@ -224,7 +224,7 @@ class Entity {
             if (!base.constructor.id) {
                 throw new Error('No id specified');
             }
-            query.where(base.constructor.id, '=', base[base.constructor.id]);
+            query.where(base.constructor.id.fieldName, '=', base[base.constructor.id.key]);
             const res = yield query.exec(dbName);
             if (res) {
                 entitymanager_1.default.removeEntity(this, context);
@@ -233,6 +233,7 @@ class Entity {
             return false;
         });
         this.fetch = (field, context) => __awaiter(this, void 0, void 0, function* () {
+            var _e;
             const base = this;
             const relation = base.constructor.relations.find((r) => r.fieldName === field);
             if (relation) {
@@ -247,7 +248,7 @@ class Entity {
                                     m.table2 === base.constructor.tableName));
                             if (relationTable) {
                                 const relations = yield new find_query_1.default(relationTable.relationTable)
-                                    .where(`${base.constructor.tableName}_id`, '=', base[base.constructor.id])
+                                    .where(`${base.constructor.tableName}_id`, '=', base[base.constructor.id.key])
                                     .exec();
                                 if (relations && relations.length) {
                                     this.relations.push({
@@ -256,7 +257,7 @@ class Entity {
                                     });
                                     base[relation.fieldName] = yield ent
                                         .findMany(context)
-                                        .where(ent.id, 'IN', relations.map((r) => r[`${ent.tableName}_id`]))
+                                        .where(((_e = ent.id) === null || _e === void 0 ? void 0 : _e.fieldName) || '', 'IN', relations.map((r) => r[`${ent.tableName}_id`]))
                                         .exec();
                                 }
                                 else {
@@ -274,7 +275,7 @@ class Entity {
                         case 'onetomany': {
                             base[field] = yield ent
                                 .findMany(context)
-                                .where(`${base.constructor.tableName}_id`, '=', base[base.constructor.id])
+                                .where(`${base.constructor.tableName}_id`, '=', base[base.constructor.id.key])
                                 .exec();
                             break;
                         }
@@ -313,7 +314,7 @@ class Entity {
             if (entity)
                 return entity;
             const query = new find_query_1.default(this.tableName);
-            query.where(this.id, '=', id);
+            query.where(this.id.fieldName, '=', id);
             const res = yield query.exec();
             if (res.length) {
                 return yield this.generateEntity(res[0], context);
@@ -326,7 +327,7 @@ class Entity {
             const query = new delete_query_1.default(this.tableName);
             if (!this.id)
                 throw new Error('No id specified');
-            query.where(this.id, '=', id);
+            query.where(this.id.fieldName, '=', id);
             return yield query.exec();
         });
     }
@@ -339,29 +340,30 @@ class Entity {
             const newObj = this.create();
             newObj.persisted = true;
             for (const [key, value] of Object.entries(res)) {
-                const field = this.columns.find((f) => f.name === key);
+                const field = this.columns.find((f) => f.fieldName === key);
                 if (field) {
-                    switch (field.getType()) {
+                    switch (field.type) {
                         case 'date':
                         case 'datetime':
                         case 'timestamp':
                         case 'time':
-                            newObj[key] = new Date(value);
+                            newObj[field.key] = new Date(value);
                             break;
                         default:
-                            newObj[key] = value;
+                            newObj[field.key] = value;
                     }
                 }
                 else {
                     newObj[key] = value;
                 }
             }
-            const entity = entitymanager_1.default.findEntity(newObj.constructor.tableName, newObj[newObj.constructor.id], context);
+            const entity = entitymanager_1.default.findEntity(newObj.constructor.tableName, newObj[newObj.constructor.id.key], context);
             if (entity) {
                 return entity;
             }
             entitymanager_1.default.addEntity(newObj, context);
             yield this.relations.reduce((prev, cur) => __awaiter(this, void 0, void 0, function* () {
+                var _a, _b, _c;
                 yield prev;
                 if (cur.autoFetch) {
                     const relationEntity = entitymanager_1.default.entities.find((e) => e.tableName === cur.entity);
@@ -373,7 +375,7 @@ class Entity {
                                     (m.table1 === cur.entity && m.table2 === this.tableName));
                                 if (relationTable) {
                                     const relations = yield new find_query_1.default(relationTable.relationTable)
-                                        .where(`${this.tableName}_id`, '=', res[this.id])
+                                        .where(`${this.tableName}_id`, '=', res[((_a = this.id) === null || _a === void 0 ? void 0 : _a.fieldName) || ''])
                                         .exec();
                                     if (relations && relations.length) {
                                         newObj.relations.push({
@@ -382,7 +384,7 @@ class Entity {
                                         });
                                         newObj[cur.fieldName] = yield ent
                                             .findMany(context)
-                                            .where(ent.id, 'IN', relations.map((r) => r[`${ent.tableName}_id`]))
+                                            .where(((_b = ent.id) === null || _b === void 0 ? void 0 : _b.fieldName) || '', 'IN', relations.map((r) => r[`${ent.tableName}_id`]))
                                             .exec();
                                     }
                                     else {
@@ -400,7 +402,7 @@ class Entity {
                             case 'onetomany': {
                                 newObj[cur.fieldName] = yield ent
                                     .findMany(context)
-                                    .where(`${this.tableName}_id`, '=', res[this.id])
+                                    .where(`${this.tableName}_id`, '=', res[((_c = this.id) === null || _c === void 0 ? void 0 : _c.fieldName) || ''])
                                     .exec();
                                 break;
                             }

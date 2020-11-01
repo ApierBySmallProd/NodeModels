@@ -1,4 +1,4 @@
-import { Field, FieldType } from './createtable';
+import { Field, FieldType } from '../field';
 import MigrationType from './migrationtype';
 export default class AlterTable extends MigrationType {
     addedFields: Field[];

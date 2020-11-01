@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const createtable_1 = require("./createtable");
+const field_1 = require("../field");
 const migrationtype_1 = __importDefault(require("./migrationtype"));
 class AlterTable extends migrationtype_1.default {
     constructor(tableName) {
@@ -11,7 +11,7 @@ class AlterTable extends migrationtype_1.default {
         this.addedFields = [];
         this.removedFields = [];
         this.addField = (fieldName, fieldType) => {
-            const field = new createtable_1.Field(fieldName, fieldType);
+            const field = new field_1.Field(fieldName, fieldType);
             this.addedFields.push(field);
             return field;
         };

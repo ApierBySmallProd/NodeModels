@@ -5,6 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Id = exports.NonPersistent = exports.AutoCreateNUpdate = exports.Table = void 0;
 const entitymanager_1 = __importDefault(require("../entitymanager"));
+const utils_1 = require("./utils");
 function Table(tableName) {
     return (constructor) => {
         return class extends constructor {
@@ -46,7 +47,13 @@ function NonPersistent() {
 exports.NonPersistent = NonPersistent;
 function Id() {
     return (target, key) => {
-        target.constructor.id = key;
+        const field = utils_1.getField(target, key);
+        if (target.constructor.id) {
+            console.error(`The entity ${target.constructor.name} has multiple id! This is not allowed!`);
+        }
+        else {
+            target.constructor.id = field;
+        }
     };
 }
 exports.Id = Id;

@@ -1,14 +1,14 @@
 import { Context } from './entitymanager';
 import DeleteQuery from './querys/delete.query';
-import { Field } from '../migration/types/createtable';
+import FieldEntity from './field.entity';
 import FindQuery from './querys/find.query';
 import { Relationship } from './types';
 export default abstract class Entity {
     static tableName: string;
-    static columns: Field[];
+    static columns: FieldEntity[];
     static nonPersistentColumns: string[];
     static primaryKeys: string[];
-    static id: string;
+    static id: FieldEntity | null;
     static autoCreateNUpdate: boolean;
     static initialized: boolean;
     static ready: boolean;
