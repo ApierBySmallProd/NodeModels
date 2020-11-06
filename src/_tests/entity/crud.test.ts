@@ -42,6 +42,8 @@ describe.each([
   describe('Create', () => {
     test('Create a simple entity', async () => {
       const cat1 = await new CategoryEntity('Cat#1').create(name, context);
+      chaiexp(cat1).not.to.be.null;
+      if (!cat1) return;
       chaiexp(cat1.getId()).not.to.be.equal(0);
 
       const res = await new FindQuery('categories').exec(name);
@@ -50,12 +52,16 @@ describe.each([
 
     test('Create an entity linked to another one', async () => {
       const cat1 = await new CategoryEntity('Cat#1').create(name, context);
+      chaiexp(cat1).not.to.be.null;
+      if (!cat1) return;
       const article1 = await new ArticleEntity(
         'Article#1',
         new Date('01/01/2020'),
         100,
         cat1,
       ).create(name, context);
+      chaiexp(article1).not.to.be.null;
+      if (!article1) return;
 
       chaiexp(article1.getId()).not.to.be.equal(0);
       const res = await new FindQuery('articles').exec(name);
@@ -70,7 +76,11 @@ describe.each([
         'john@doe.fr',
         new Date('01/01/1980'),
       ).create(name, context);
+      chaiexp(user1).not.to.be.null;
+      if (!user1) return;
       const cat1 = await new CategoryEntity('Cat#1').create(name, context);
+      chaiexp(cat1).not.to.be.null;
+      if (!cat1) return;
       const article1 = await new ArticleEntity(
         'Article#1',
         new Date('01/01/2020'),
@@ -78,6 +88,7 @@ describe.each([
         cat1,
         [user1],
       ).create(name, context);
+      if (!article1) return;
 
       const res = await new FindQuery('article_authors').exec(name);
       chaiexp(res.length).to.be.equal(1);
@@ -89,6 +100,8 @@ describe.each([
   describe('Update', () => {
     test('Update a simple entity', async () => {
       const cat1 = await new CategoryEntity('Cat#1').create(name, context);
+      chaiexp(cat1).not.to.be.null;
+      if (!cat1) return;
       chaiexp(cat1.getId()).not.to.be.equal(0);
 
       const res = await new FindQuery('categories').exec(name);
@@ -105,13 +118,18 @@ describe.each([
 
     test('Update an entity linked to another one', async () => {
       const cat1 = await new CategoryEntity('Cat#1').create(name, context);
+      chaiexp(cat1).not.to.be.null;
+      if (!cat1) return;
       const cat2 = await new CategoryEntity('Cat#2').create(name, context);
+      if (!cat2) return;
       const article1 = await new ArticleEntity(
         'Article#1',
         new Date('01/01/2020'),
         100,
         cat1,
       ).create(name, context);
+      chaiexp(article1).not.to.be.null;
+      if (!article1) return;
 
       chaiexp(article1.getId()).not.to.be.equal(0);
       const res = await new FindQuery('articles').exec(name);
@@ -133,13 +151,18 @@ describe.each([
         'john@doe.fr',
         new Date('01/01/1980'),
       ).create(name, context);
+      chaiexp(user1).not.to.be.null;
+      if (!user1) return;
       const user2 = await new UserEntity(
         'Jane',
         'Doe',
         'jane@doe.fr',
         new Date('01/01/1980'),
       ).create(name, context);
+      if (!user2) return;
       const cat1 = await new CategoryEntity('Cat#1').create(name, context);
+      chaiexp(cat1).not.to.be.null;
+      if (!cat1) return;
       const article1 = await new ArticleEntity(
         'Article#1',
         new Date('01/01/2020'),
@@ -147,6 +170,7 @@ describe.each([
         cat1,
         [user1],
       ).create(name, context);
+      if (!article1) return;
 
       const res = await new FindQuery('article_authors').exec(name);
       chaiexp(res.length).to.be.equal(1);
@@ -166,6 +190,8 @@ describe.each([
   describe('Delete', () => {
     test('Delete a simple entity', async () => {
       const cat1 = await new CategoryEntity('Cat#1').create(name, context);
+      chaiexp(cat1).not.to.be.null;
+      if (!cat1) return;
       chaiexp(cat1.getId()).not.to.be.equal(0);
 
       const res = await new FindQuery('categories').exec(name);
@@ -184,7 +210,11 @@ describe.each([
         'john@doe.fr',
         new Date('01/01/1980'),
       ).create(name, context);
+      chaiexp(user1).not.to.be.null;
+      if (!user1) return;
       const cat1 = await new CategoryEntity('Cat#1').create(name, context);
+      chaiexp(cat1).not.to.be.null;
+      if (!cat1) return;
       const article1 = await new ArticleEntity(
         'Article#1',
         new Date('01/01/2020'),
@@ -192,6 +222,7 @@ describe.each([
         cat1,
         [user1],
       ).create(name, context);
+      if (!article1) return;
 
       const res = await new FindQuery('article_authors').exec(name);
       chaiexp(res.length).to.be.equal(1);
@@ -209,6 +240,8 @@ describe.each([
 
     test('Delete by id', async () => {
       const cat1 = await new CategoryEntity('Cat#1').create(name, context);
+      chaiexp(cat1).not.to.be.null;
+      if (!cat1) return;
       chaiexp(cat1.getId()).not.to.be.equal(0);
 
       const res = await new FindQuery('categories').exec(name);
@@ -224,6 +257,8 @@ describe.each([
   describe('Find', () => {
     test('Find one', async () => {
       const cat1 = await new CategoryEntity('Cat#1').create(name, context);
+      chaiexp(cat1).not.to.be.null;
+      if (!cat1) return;
 
       EntityManager.clearContext(context);
 
@@ -236,7 +271,10 @@ describe.each([
 
     test('Find many', async () => {
       const cat1 = await new CategoryEntity('Cat#1').create(name, context);
+      chaiexp(cat1).not.to.be.null;
+      if (!cat1) return;
       const cat2 = await new CategoryEntity('Cat#2').create(name, context);
+      if (!cat2) return;
       const cat3 = await new CategoryEntity('Cat#3').create(name, context);
 
       EntityManager.clearContext(context);
@@ -251,6 +289,8 @@ describe.each([
 
     test('Find one by id', async () => {
       const cat1 = await new CategoryEntity('Cat#1').create(name, context);
+      chaiexp(cat1).not.to.be.null;
+      if (!cat1) return;
 
       EntityManager.clearContext(context);
 
@@ -265,12 +305,16 @@ describe.each([
 
     test('Find one with a relationship with another entity', async () => {
       const cat1 = await new CategoryEntity('Cat#1').create(name, context);
+      chaiexp(cat1).not.to.be.null;
+      if (!cat1) return;
       const article1 = await new ArticleEntity(
         'Article#1',
         new Date('01/01/2020'),
         100,
         cat1,
       ).create(name, context);
+      chaiexp(article1).not.to.be.null;
+      if (!article1) return;
 
       EntityManager.clearContext(context);
 
@@ -279,8 +323,10 @@ describe.each([
         context,
         name,
       );
-      chaiexp(article.getCategory().getId()).to.be.equal(cat1.getId());
-      chaiexp(article.getCategory().getLabel()).to.be.equal(cat1.getLabel());
+      const category = article.getCategory();
+      if (!category) return;
+      chaiexp(category.getId()).to.be.equal(cat1.getId());
+      chaiexp(category.getLabel()).to.be.equal(cat1.getLabel());
     });
 
     test('Find one with a many to many relationship', async () => {
@@ -290,7 +336,11 @@ describe.each([
         'john@doe.fr',
         new Date('01/01/1980'),
       ).create(name, context);
+      chaiexp(user1).not.to.be.null;
+      if (!user1) return;
       const cat1 = await new CategoryEntity('Cat#1').create(name, context);
+      chaiexp(cat1).not.to.be.null;
+      if (!cat1) return;
       const article1 = await new ArticleEntity(
         'Article#1',
         new Date('01/01/2020'),
@@ -298,6 +348,7 @@ describe.each([
         cat1,
         [user1],
       ).create(name, context);
+      if (!article1) return;
 
       EntityManager.clearContext(context);
 
@@ -317,7 +368,11 @@ describe.each([
         'john@doe.fr',
         new Date('01/01/1980'),
       ).create(name, context);
+      chaiexp(user1).not.to.be.null;
+      if (!user1) return;
       const cat1 = await new CategoryEntity('Cat#1').create(name, context);
+      chaiexp(cat1).not.to.be.null;
+      if (!cat1) return;
       const article1 = await new ArticleEntity(
         'Article#1',
         new Date('01/01/2020'),
@@ -325,6 +380,7 @@ describe.each([
         cat1,
         [user1],
       ).create(name, context);
+      if (!article1) return;
 
       EntityManager.clearContext(context);
 
