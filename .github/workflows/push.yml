@@ -1,0 +1,15 @@
+name: Tests
+on: push
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Start databases
+        run: yarn run test:before
+      - name: Wait databases
+        run: sleep 10
+      - name: Tests
+        run: yarn run test:all
+      - name: Clear stack
+        run: yarn run test:after

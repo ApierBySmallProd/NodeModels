@@ -29,7 +29,8 @@
         "test:init": "./src/_tests/_config/init_tests.sh",
         "test:before": "./src/_tests/_config/before_tests.sh",
         "test:after": "./src/_tests/_config/after_tests.sh",
-        "test:all": "jest  --config ./src/_tests/_config/jest.config.js --coverage --verbose --runInBand --watch",
+        "test:all": "jest --config ./src/_tests/_config/jest.config.js --coverage --verbose --runInBand",
+        "test:all:watch": "jest  --config ./src/_tests/_config/jest.config.js --coverage --verbose --runInBand --watch",
         "test": "./src/_tests/_config/tests.sh"
     },
     "devDependencies": {
