@@ -12,7 +12,9 @@ export default class DeleteQuery extends WhereQuery {
    * Execute the delete query and return the number of deleted rows
    */
   public exec = async (dbName: string | null = null) => {
-    const db = DbManager.get().get(dbName);
+    let dbConnName = dbName;
+    if (!dbConnName && this.dbName) dbConnName = this.dbName;
+    const db = DbManager.getInstance().get(dbConnName);
     if (!db) throw Error('Database not found');
     return await db.delete(this.tableName, this.wheres);
   };

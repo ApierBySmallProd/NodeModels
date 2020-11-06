@@ -1,14 +1,12 @@
+import { GlobalModel } from '../..';
 import MigrationType from './migrationtype';
 
 export default class DropTable extends MigrationType {
-  constructor(tableName: string) {
+  public constructor(tableName: string) {
     super(tableName, 'droptable');
   }
 
-  public formatQuery = () => {
-    const query = [`DROP TABLE ${this.tableName}`];
-    return {
-      query,
-    };
+  public execute = async (model: GlobalModel) => {
+    await model.removeTable(this.tableName);
   };
 }

@@ -1,11 +1,13 @@
 import { Field, FieldType } from '../field';
 
 import AlterTable from './altertable';
+import { GlobalModel } from '../..';
 import MigrationType from './migrationtype';
 
 export default class CreateTable extends MigrationType {
   public fields: Field[] = [];
-  constructor(tableName: string) {
+
+  public constructor(tableName: string) {
     super(tableName, 'createtable');
   }
 
@@ -13,22 +15,6 @@ export default class CreateTable extends MigrationType {
     const newField = new Field(name, type);
     this.fields.push(newField);
     return newField;
-  };
-
-  public formatQuery = () => {
-    const fieldsString = this.fields.map((f) => f.formatField()).join(', ');
-
-    let fieldsConstraints: string[] = [];
-    this.fields.forEach((cur) => {
-      fieldsConstraints = fieldsConstraints.concat(
-        cur.formatConstraint(this.tableName),
-      );
-    });
-    const query = [`CREATE TABLE \`${this.tableName}\` (${fieldsString})`];
-    return {
-      query,
-      constraints: fieldsConstraints,
-    };
   };
 
   public applyMigration = (migration: MigrationType) => {
@@ -88,5 +74,9 @@ export default class CreateTable extends MigrationType {
 
   public getName = () => {
     return `create-table-${this.tableName.toLowerCase()}`;
+  };
+
+  public execute = async (model: GlobalModel) => {
+    await model.createTable(this.tableName, this.fields);
   };
 }

@@ -10,7 +10,7 @@ import { Relationship } from './types';
 import fs from 'fs';
 import path from 'path';
 
-export const makeMigrations = async (constructor: any) => {
+export const makeMigrations = async (constructor: any, dbName?: string) => {
   let relationship: Relationship;
   const relationFields: FieldEntity[] = [];
   const manyToMany = [];
@@ -23,10 +23,10 @@ export const makeMigrations = async (constructor: any) => {
       if (
         relationEntity &&
         relationEntity.entity.ready &&
-        relationEntity.entity.initialized
+        EntityManager.initializedEntities.includes(relationship.entity)
       ) {
         const relationId: FieldEntity = relationEntity.entity.columns.find(
-          (f: FieldEntity) => f.key === relationEntity.entity.id,
+          (f: FieldEntity) => f.key === relationEntity.entity.id.key,
         );
         if (!relationId) {
           throw Error(`Unknown id`);
@@ -45,7 +45,7 @@ export const makeMigrations = async (constructor: any) => {
       }
     } else if (relationship.type === 'manytomany') {
       if (relationEntity && relationEntity.entity.ready) {
-        if (relationEntity.entity.initialized) {
+        if (relationEntity.entity.initialized && relationship.relationTable) {
           const relationId: FieldEntity = relationEntity.entity.columns.find(
             (f: FieldEntity) => f.key === relationEntity.entity.id.key,
           );
@@ -72,13 +72,13 @@ export const makeMigrations = async (constructor: any) => {
           );
           otherfield.foreign(constructor.tableName, constructor.id.fieldName);
           manyToMany.push({
-            name: `relation_${constructor.tableName}_${relationEntity.entity.tableName}`,
+            name: relationship.relationTable,
             fields: [field, otherfield],
           });
           EntityManager.registerManyToManyTable(
             constructor.tableName,
             relationEntity.entity.tableName,
-            `relation_${constructor.tableName}_${relationEntity.entity.tableName}`,
+            relationship.relationTable,
           );
         }
       } else {
@@ -86,20 +86,21 @@ export const makeMigrations = async (constructor: any) => {
       }
     }
   }
-  constructor.initialized = true;
+  EntityManager.initializedEntities.push(constructor.tableName);
   await checkAndMigrate(
     constructor.tableName,
     constructor.columns.concat(relationFields),
+    constructor.dbName || dbName,
   );
   await manyToMany.reduce(async (prev: any, cur: any) => {
     await prev;
-    await checkAndMigrate(cur.name, cur.fields);
+    await checkAndMigrate(cur.name, cur.fields, constructor.dbName || dbName);
   }, Promise.resolve());
 };
 
 const analyzeMigrations = async (tableName: string) => {
-  const model = DbManager.get().get();
-  const config = DbManager.get().getConfig();
+  const model = DbManager.getInstance().get();
+  const config = DbManager.getInstance().getConfig();
   if (!model) {
     throw new Error('Database not found');
   }
@@ -129,8 +130,11 @@ const analyzeMigrations = async (tableName: string) => {
   return globalMigration;
 };
 
-const createMigration = async (migration: CreateTable | AlterTable) => {
-  const config = DbManager.get().getConfig();
+const createMigration = async (
+  migration: CreateTable | AlterTable,
+  dbName?: string,
+) => {
+  const config = DbManager.getInstance().getConfig();
   const now = new Date();
   const fileName = `[${now
     .toISOString()
@@ -146,14 +150,18 @@ const createMigration = async (migration: CreateTable | AlterTable) => {
   const migr = new Migration(`${migration.getName()}-${nbFile}`, 'up', [
     migration,
   ]);
-  const model = DbManager.get().get();
+  const model = DbManager.getInstance().get(dbName);
   if (!model) {
     throw new Error('Database not found');
   }
-  await migr.execute(model);
+  await migr.execute(model, true);
 };
 
-const checkAndMigrate = async (tableName: string, columns: FieldEntity[]) => {
+const checkAndMigrate = async (
+  tableName: string,
+  columns: FieldEntity[],
+  dbName?: string,
+) => {
   const globalMigration = await analyzeMigrations(tableName);
   const newSchema = new CreateTable(tableName);
   newSchema.fields = columns.map((field: FieldEntity) =>
@@ -161,6 +169,6 @@ const checkAndMigrate = async (tableName: string, columns: FieldEntity[]) => {
   );
   const migration = globalMigration.compareSchema(newSchema);
   if (migration) {
-    await createMigration(migration);
+    await createMigration(migration, dbName);
   }
 };

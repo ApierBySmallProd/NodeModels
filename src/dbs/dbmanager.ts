@@ -11,7 +11,7 @@ const defaultConfig: Config = {
 };
 
 export default class DbManager {
-  public static get = () => {
+  public static getInstance = () => {
     if (!DbManager._instance) {
       DbManager._instance = new DbManager();
     }
@@ -104,6 +104,14 @@ export default class DbManager {
     const db = this.dbs.find((d) => d.name === name);
     if (db) return db.db;
     return null;
+  };
+
+  public clear = async () => {
+    await this.dbs.reduce(async (previous, current) => {
+      await previous;
+      await current.db.disconnect();
+    }, Promise.resolve());
+    this.dbs = [];
   };
 }
 

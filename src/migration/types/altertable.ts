@@ -1,11 +1,13 @@
 import { Field, FieldType } from '../field';
 
+import { GlobalModel } from '../..';
 import MigrationType from './migrationtype';
 
 export default class AlterTable extends MigrationType {
   public addedFields: Field[] = [];
   public removedFields: string[] = [];
-  constructor(tableName: string) {
+
+  public constructor(tableName: string) {
     super(tableName, 'altertable');
   }
 
@@ -17,25 +19,6 @@ export default class AlterTable extends MigrationType {
 
   public removeField = (fieldName: string) => {
     this.removedFields.push(fieldName);
-  };
-
-  public formatQuery = () => {
-    const toAdd = this.addedFields.map(
-      (f) => `ALTER TABLE \`${this.tableName}\` ADD ${f.formatField()}`,
-    );
-    const toRemove = this.removedFields.map(
-      (f) => `ALTER TABLE \`${this.tableName}\` DROP COLUMN \`${f}\``,
-    );
-    let fieldsConstraints: string[] = [];
-    this.addedFields.forEach((cur) => {
-      fieldsConstraints = fieldsConstraints.concat(
-        cur.formatConstraint(this.tableName),
-      );
-    });
-    return {
-      query: [...toRemove, ...toAdd],
-      constraints: fieldsConstraints,
-    };
   };
 
   public generateMigrationFile = (name: string) => {
@@ -54,5 +37,9 @@ export default class AlterTable extends MigrationType {
 
   public getName = () => {
     return `alter-table-${this.tableName.toLowerCase()}`;
+  };
+
+  public execute = async (model: GlobalModel) => {
+    model.alterTable(this.tableName, this.addedFields, this.removedFields);
   };
 }

@@ -90,11 +90,16 @@ export function OneToMany(entity: string, autoFetch: boolean = false) {
 }
 
 // tslint:disable-next-line: function-name
-export function ManyToMany(entity: string, autoFetch: boolean = false) {
+export function ManyToMany(
+  entity: string,
+  relationTable: string,
+  autoFetch: boolean = false,
+) {
   return (target: any, key: string) => {
     const relationship: Relationship = {
       entity,
       autoFetch,
+      relationTable,
       data: null,
       type: 'manytomany',
       fieldName: key,

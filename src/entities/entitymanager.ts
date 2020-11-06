@@ -1,4 +1,5 @@
 import Entity from './entity';
+import MigrationEntity from './migration.entity';
 import { makeMigrations } from './automigration';
 
 export interface IEntity {
@@ -10,10 +11,12 @@ export default class EntityManager {
   public static waitingEntities: any[] = [];
   public static entities: IEntity[] = [];
   public static manyToManyTables: any[] = [];
-  public static initialize = async () => {
+  public static initializedEntities: string[] = [];
+  public static initialize = async (dbName?: string) => {
+    MigrationEntity.reset();
     EntityManager.initializingEntities = true;
     while (EntityManager.waitingEntities.length) {
-      await makeMigrations(EntityManager.waitingEntities.pop());
+      await makeMigrations(EntityManager.waitingEntities.pop(), dbName);
     }
     EntityManager.initializingEntities = false;
   };
@@ -37,18 +40,26 @@ export default class EntityManager {
     );
   };
 
+  public static clearContext = (context: Context) => {
+    context.entities = [];
+  };
+
   public static registerEntity<
     T extends { tableName: string; new (...args: any[]): Entity }
   >(entity: T) {
     this.registeredEntities.push(entity);
-    new entity();
+    new (entity as any)();
   }
 
   public static registerEntities<
     T extends { tableName: string; new (...args: any[]): Entity }
   >(entities: T[]) {
     this.registeredEntities = this.registeredEntities.concat(entities);
-    entities.forEach((entity) => new entity());
+    entities.forEach((entity: any) => new entity());
+  }
+
+  public static clearRegisteredEntities() {
+    this.registeredEntities = [];
   }
 
   public static registerManyToManyTable = (
@@ -93,7 +104,7 @@ export default class EntityManager {
     context.entities = context.entities.filter(
       (e: any) =>
         e.constructor.tableName === ent.constructor.tableName &&
-        e[e.constructor.id] === ent[ent.contructor.id],
+        e[e.constructor.id] === ent[ent.constructor.id],
     );
   };
   private static contexts: Context[] = [{ entities: [], id: 'default' }];

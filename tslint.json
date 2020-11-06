@@ -23,6 +23,7 @@
         "ordered-imports": false,
         "object-literal-sort-keys": false,
         "arrow-parens": false,
+        "no-increment-decrement": false,
         "member-ordering": [
             true,
             {
@@ -47,10 +48,7 @@
         ],
         "no-inferrable-types": [true, "ignore-params"],
         "no-switch-case-fall-through": true,
-        "typedef": [
-            true,
-            "parameter"
-        ],
+        "typedef": [true, "parameter"],
         "trailing-comma": [
             true,
             {

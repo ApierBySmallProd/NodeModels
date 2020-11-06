@@ -113,14 +113,6 @@ export function Timestamp() {
 }
 
 // tslint:disable-next-line: function-name
-export function Year() {
-  return (target: any, key: string) => {
-    const field = getField(target, key);
-    field.setType('year');
-  };
-}
-
-// tslint:disable-next-line: function-name
 export function Char() {
   return (target: any, key: string) => {
     const field = getField(target, key);

@@ -11,7 +11,7 @@ export default class Migration {
   private migrationName: string;
   private type: 'up' | 'down';
 
-  constructor(
+  public constructor(
     migrationName: string,
     type: 'up' | 'down',
     migrations: MigrationType[] = [],
@@ -62,45 +62,20 @@ export default class Migration {
     );
   };
 
-  public execute = async (db: GlobalModel) => {
+  public execute = async (db: GlobalModel, silent?: boolean) => {
     if (!(await db.startTransaction())) {
       console.error('Transaction cannot be started');
       console.log('\x1b[31m  → Failure\x1b[0m');
+      throw new Error();
       return;
     }
     try {
       // Execute the migration
-      const results = this.migrations.map((m) => m.formatQuery());
-      await results.reduce(async (prev, cur) => {
+      await this.migrations.reduce(async (prev, cur) => {
         await prev;
-        if (cur.query && cur.query.length) {
-          await cur.query.reduce(async (p, c) => {
-            await p;
-            const res = await db.query(
-              `SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE='BASE TABLE'`,
-            );
-            await db.query(c, [], true);
-          }, Promise.resolve());
-        }
+        await cur.execute(db);
       }, Promise.resolve());
-      await results.reduce(async (prev, cur) => {
-        await prev;
-        if (cur.constraints && cur.constraints.length) {
-          await cur.constraints.reduce(async (p, c) => {
-            await p;
-            await db.query(c, [], true);
-          }, Promise.resolve());
-        }
-      }, Promise.resolve());
-      await results.reduce(async (prev, cur) => {
-        await prev;
-        if (cur.seeds && cur.seeds.length) {
-          await cur.seeds.reduce(async (p, c) => {
-            await p;
-            await db.query(c, [], true);
-          }, Promise.resolve());
-        }
-      }, Promise.resolve());
+
       // Save the status in db
       if (this.type === 'up') {
         await MigrationEntity.create(db, this.migrationName);
@@ -108,11 +83,12 @@ export default class Migration {
         await MigrationEntity.delete(db, this.migrationName);
       }
       await db.commit();
-      console.log('\x1b[32m  → Success\x1b[0m');
+      if (!silent) console.log('\x1b[32m  → Success\x1b[0m');
     } catch (error) {
       await db.rollback();
       console.error(error);
       console.log('\x1b[31m  → Failure\x1b[0m');
+      throw new Error();
     }
   };
 }

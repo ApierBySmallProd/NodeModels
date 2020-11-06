@@ -7,14 +7,15 @@ import FindQuery from './querys/find.query';
 import { Relationship } from './types';
 import UpdateQuery from './querys/update.query';
 
-export default abstract class Entity {
+export default class Entity {
   public static tableName: string;
+  public static dbName?: string;
   public static columns: FieldEntity[];
   public static nonPersistentColumns: string[];
   public static primaryKeys: string[];
   public static id: FieldEntity | null;
   public static autoCreateNUpdate: boolean;
-  public static initialized: boolean;
+  public static initialized = false;
   public static ready: boolean;
   public static relations: Relationship[];
 
@@ -23,54 +24,66 @@ export default abstract class Entity {
   };
 
   public static findOne(context?: Context) {
-    const query = new FindQuery(this.tableName, async (res: any[]) => {
-      if (res.length) {
-        return await this.generateEntity(res[0], context);
-      }
-      return null;
-    });
+    const query = new FindQuery(
+      this.tableName,
+      async (res: any[]) => {
+        if (res.length) {
+          return await this.generateEntity(res[0], context);
+        }
+        return null;
+      },
+      this.dbName,
+    );
     query.limit(1);
     return query;
   }
 
-  public static findMany(context?: Context) {
-    const query = new FindQuery(this.tableName, async (res: any[]) => {
-      const result: Entity[] = [];
-      await res.reduce(async (prev: any, r: any) => {
-        await prev;
-        result.push(await this.generateEntity(r, context));
-      }, Promise.resolve());
-      return result;
-    });
+  public static findMany(context?: Context, dbName?: string) {
+    const query = new FindQuery(
+      this.tableName,
+      async (res: any[]) => {
+        const result: Entity[] = [];
+        await res.reduce(async (prev: any, r: any) => {
+          await prev;
+          result.push(await this.generateEntity(r, context, dbName));
+        }, Promise.resolve());
+        return result;
+      },
+      this.dbName,
+    );
     return query;
   }
 
-  public static async findById(id: any, context?: Context) {
+  public static async findById(id: any, context?: Context, dbName?: string) {
     if (!this.id) throw new Error('No id specified');
     const entity = EntityManager.findEntity(this.tableName, id);
     if (entity) return entity;
     const query = new FindQuery(this.tableName);
     query.where(this.id.fieldName, '=', id);
-    const res = await query.exec();
+    const res = await query.exec(dbName);
     if (res.length) {
-      return await this.generateEntity(res[0], context);
+      return await this.generateEntity(res[0], context, dbName);
     }
     return null;
   }
 
-  public static async deleteById(id: any) {
+  public static async deleteById(id: any, context?: Context, dbName?: string) {
     const query = new DeleteQuery(this.tableName);
     if (!this.id) throw new Error('No id specified');
     query.where(this.id.fieldName, '=', id);
-    return await query.exec();
+    const res = await query.exec(dbName);
+    if (res) {
+      const entity: any = EntityManager.findEntity(this.tableName, id, context);
+      if (entity) EntityManager.removeEntity(entity, context);
+    }
+    return res;
   }
 
-  public static delete() {
-    const query = new DeleteQuery(this.tableName);
-    return query;
-  }
-
-  private static async generateEntity(res: any, context?: Context) {
+  private static async generateEntity(
+    res: any,
+    context?: Context,
+    dbName?: string,
+  ) {
     const newObj: any = this.create();
     newObj.persisted = true;
     for (const [key, value] of Object.entries(res)) {
@@ -111,34 +124,44 @@ export default abstract class Entity {
           const ent: typeof Entity = relationEntity.entity;
           switch (cur.type) {
             case 'manytomany': {
-              const relationTable = EntityManager.manyToManyTables.find(
-                (m) =>
-                  (m.table1 === this.tableName && m.table2 === cur.entity) ||
-                  (m.table1 === cur.entity && m.table2 === this.tableName),
-              );
+              const relationTable = cur.relationTable;
               if (relationTable) {
-                const relations = await new FindQuery(
-                  relationTable.relationTable,
-                )
+                const relations = await new FindQuery(relationTable)
                   .where(
-                    `${this.tableName}_id`,
+                    `${
+                      this.tableName.endsWith('s')
+                        ? this.tableName.substr(0, this.tableName.length - 1)
+                        : this.tableName
+                    }_id`,
                     '=',
                     res[this.id?.fieldName || ''],
                   )
-                  .exec();
+                  .exec(dbName);
                 if (relations && relations.length) {
                   newObj.relations.push({
                     entity: cur.entity,
                     data: relations,
                   });
                   newObj[cur.fieldName] = await ent
-                    .findMany(context)
+                    .findMany(context, dbName)
                     .where(
                       ent.id?.fieldName || '',
                       'IN',
-                      relations.map((r: any) => r[`${ent.tableName}_id`]),
+                      relations.map(
+                        (r: any) =>
+                          r[
+                            `${
+                              ent.tableName.endsWith('s')
+                                ? ent.tableName.substr(
+                                    0,
+                                    ent.tableName.length - 1,
+                                  )
+                                : ent.tableName
+                            }_id`
+                          ],
+                      ),
                     )
-                    .exec();
+                    .exec(dbName);
                 } else {
                   newObj[cur.fieldName] = [];
                 }
@@ -150,6 +173,7 @@ export default abstract class Entity {
                 newObj[cur.fieldName] = await ent.findById(
                   res[`${cur.fieldName}_id`],
                   context,
+                  dbName,
                 );
               }
               break;
@@ -162,7 +186,7 @@ export default abstract class Entity {
                   '=',
                   res[this.id?.fieldName || ''],
                 )
-                .exec();
+                .exec(dbName);
               break;
             }
             default:
@@ -242,24 +266,21 @@ export default abstract class Entity {
               (r: any) => r.entity === relation.entity,
             );
             const relData = rel ? rel.data : [];
-            const relationTable = EntityManager.manyToManyTables.find(
-              (m) =>
-                (m.table1 === base.constructor.tableName &&
-                  m.table2 === relation.entity) ||
-                (m.table1 === relation.entity &&
-                  m.table2 === base.constructor.tableName),
-            );
+            const relationTable = relation.relationTable;
             if (relationTable) {
               base[relation.fieldName].forEach((elem: any) => {
                 if (
                   elem.persisted &&
                   !relData.includes(elem[elem.constructor.id.key])
                 ) {
-                  const manyToManyQuery = new CreateQuery(
-                    relationTable.relationTable,
-                  );
+                  const manyToManyQuery = new CreateQuery(relationTable);
+                  const tableName: string = elem.constructor.tableName;
                   manyToManyQuery.setAttribute(
-                    `${elem.constructor.tableName}_id`,
+                    `${
+                      tableName.endsWith('s')
+                        ? tableName.substr(0, tableName.length - 1)
+                        : tableName
+                    }_id`,
                     elem[elem.constructor.id.key],
                   );
                   manyToManyQueries.push(manyToManyQuery);
@@ -291,11 +312,16 @@ export default abstract class Entity {
         EntityManager.addEntity(this, context);
         await manyToManyQueries.reduce(async (prev: any, cur: CreateQuery) => {
           await prev;
+          const tableName: string = base.constructor.tableName;
           cur.setAttribute(
-            `${base.constructor.tableName}_id`,
+            `${
+              tableName.endsWith('s')
+                ? tableName.substr(0, tableName.length - 1)
+                : tableName
+            }_id`,
             base[base.constructor.id.key],
           );
-          await cur.exec();
+          await cur.exec(dbName);
         }, Promise.resolve());
       }
       return this;
@@ -372,8 +398,6 @@ export default abstract class Entity {
     await base.constructor.relations.reduce(
       async (prev: any, relation: Relationship) => {
         await prev;
-        console.log(relation);
-        console.log(base);
         if (base[relation.fieldName]) {
           switch (relation.type) {
             case 'manytomany': {
@@ -381,16 +405,21 @@ export default abstract class Entity {
                 (r: any) => r.entity === relation.entity,
               );
               const relData = rel ? rel.data : [];
-              const relationTable = EntityManager.manyToManyTables.find(
-                (m) =>
-                  (m.table1 === base.constructor.tableName &&
-                    m.table2 === relation.entity) ||
-                  (m.table1 === relation.entity &&
-                    m.table2 === base.constructor.tableName),
-              );
-              console.log(EntityManager.manyToManyTables);
-              console.log(relationTable);
+              const relationTable = relation.relationTable;
               if (relationTable) {
+                const curTableName: string = base.constructor.tableName;
+                const curTableField = `${
+                  curTableName.endsWith('s')
+                    ? curTableName.substr(0, curTableName.length - 1)
+                    : curTableName
+                }_id`;
+                const removeOldQuery = new DeleteQuery(relationTable);
+                removeOldQuery.where(
+                  curTableField,
+                  '=',
+                  base[base.constructor.id.key],
+                );
+                await removeOldQuery.exec(dbName);
                 await base[relation.fieldName].reduce(
                   async (previous: any, elem: any) => {
                     await previous;
@@ -398,18 +427,24 @@ export default abstract class Entity {
                       elem.persisted &&
                       !relData.includes(elem[elem.constructor.id.key])
                     ) {
-                      const manyToManyQuery = new CreateQuery(
-                        relationTable.relationTable,
-                      );
+                      const tableName: string = elem.constructor.tableName;
+                      const tableField = `${
+                        tableName.endsWith('s')
+                          ? tableName.substr(0, tableName.length - 1)
+                          : tableName
+                      }_id`;
+                      const manyToManyQuery = new CreateQuery(relationTable);
+
                       manyToManyQuery.setAttribute(
-                        `${elem.constructor.tableName}_id`,
+                        tableField,
                         elem[elem.constructor.id.key],
                       );
+
                       manyToManyQuery.setAttribute(
-                        `${base.constructor.tableName}_id`,
+                        curTableField,
                         base[base.constructor.id.key],
                       );
-                      await manyToManyQuery.exec();
+                      await manyToManyQuery.exec(dbName);
                     }
                   },
                   Promise.resolve(),
@@ -448,6 +483,24 @@ export default abstract class Entity {
     if (!base.constructor.id) {
       throw new Error('No id specified');
     }
+    await base.constructor.relations.reduce(
+      async (prev: any, relation: Relationship) => {
+        await prev;
+        if (relation.type === 'manytomany' && relation.relationTable) {
+          const curTableName: string = base.constructor.tableName;
+          const curTableField = `${
+            curTableName.endsWith('s')
+              ? curTableName.substr(0, curTableName.length - 1)
+              : curTableName
+          }_id`;
+
+          const deleteQuery = new DeleteQuery(relation.relationTable);
+          deleteQuery.where(curTableField, '=', base[base.constructor.id.key]);
+          await deleteQuery.exec(dbName);
+        }
+      },
+      Promise.resolve(),
+    );
     query.where(
       base.constructor.id.fieldName,
       '=',
@@ -461,7 +514,7 @@ export default abstract class Entity {
     return false;
   };
 
-  public fetch = async (field: string, context?: Context) => {
+  public fetch = async (field: string, context?: Context, dbName?: string) => {
     const base = this as any;
     const relation: Relationship = base.constructor.relations.find(
       (r: Relationship) => r.fieldName === field,
@@ -474,34 +527,45 @@ export default abstract class Entity {
         const ent: typeof Entity = rel.entity;
         switch (relation.type) {
           case 'manytomany': {
-            const relationTable = EntityManager.manyToManyTables.find(
-              (m) =>
-                (m.table1 === base.constructor.tableName &&
-                  m.table2 === relation.entity) ||
-                (m.table1 === relation.entity &&
-                  m.table2 === base.constructor.tableName),
-            );
+            const relationTable = relation.relationTable;
             if (relationTable) {
-              const relations = await new FindQuery(relationTable.relationTable)
+              const tableName: string = base.constructor.tableName;
+              const relations = await new FindQuery(relationTable)
                 .where(
-                  `${base.constructor.tableName}_id`,
+                  `${
+                    tableName.endsWith('s')
+                      ? tableName.substr(0, tableName.length - 1)
+                      : tableName
+                  }_id`,
                   '=',
                   base[base.constructor.id.key],
                 )
-                .exec();
+                .exec(dbName);
               if (relations && relations.length) {
                 this.relations.push({
                   entity: relation.entity,
                   data: relations,
                 });
                 base[relation.fieldName] = await ent
-                  .findMany(context)
+                  .findMany(context, dbName)
                   .where(
                     ent.id?.fieldName || '',
                     'IN',
-                    relations.map((r: any) => r[`${ent.tableName}_id`]),
+                    relations.map(
+                      (r: any) =>
+                        r[
+                          `${
+                            ent.tableName.endsWith('s')
+                              ? ent.tableName.substr(
+                                  0,
+                                  ent.tableName.length - 1,
+                                )
+                              : ent.tableName
+                          }_id`
+                        ],
+                    ),
                   )
-                  .exec();
+                  .exec(dbName);
               } else {
                 base[field] = [];
               }
@@ -513,19 +577,20 @@ export default abstract class Entity {
               base[field] = await ent.findById(
                 base[`${relation.entity}_id`],
                 context,
+                dbName,
               );
             }
             break;
           }
           case 'onetomany': {
             base[field] = await ent
-              .findMany(context)
+              .findMany(context, dbName)
               .where(
                 `${base.constructor.tableName}_id`,
                 '=',
                 base[base.constructor.id.key],
               )
-              .exec();
+              .exec(dbName);
             break;
           }
           default:

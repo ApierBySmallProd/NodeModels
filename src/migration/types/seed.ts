@@ -1,9 +1,11 @@
+import { GlobalModel } from '../..';
 import MigrationType from './migrationtype';
 
 export default class SeedTable extends MigrationType {
   private rows: SeedRow[] = [];
   private clear = false;
-  constructor(tableName: string) {
+
+  public constructor(tableName: string) {
     super(tableName, 'seed');
   }
 
@@ -17,29 +19,27 @@ export default class SeedTable extends MigrationType {
     this.clear = true;
   };
 
-  public formatQuery = () => {
+  public execute = async (model: GlobalModel) => {
     if (this.clear) {
-      return { query: [`DELETE FROM ${this.tableName}`] };
+      await model.delete(this.tableName, []);
+    } else {
+      await this.rows.reduce(async (prev, cur) => {
+        await prev;
+        const attributes = cur.getData();
+        await model.insert(this.tableName, attributes);
+      }, Promise.resolve());
     }
-    const seeds = this.rows.map((r) => r.formatRow(this.tableName));
-    return {
-      seeds,
-    };
   };
 }
 
 export class SeedRow {
-  private datas: RowData[] = [];
+  private data: RowData[] = [];
   public add = (columnName: string, value: any) => {
-    this.datas.push({ value, column: columnName });
+    this.data.push({ value, column: columnName });
     return this;
   };
 
-  public formatRow = (tableName: string) => {
-    const columns = this.datas.map((d) => d.column).join(', ');
-    const values = this.datas.map((d) => `'${d.value}'`).join(', ');
-    return `INSERT INTO ${tableName} (${columns}) VALUES (${values})`;
-  };
+  public getData = () => this.data;
 }
 
 export interface RowData {

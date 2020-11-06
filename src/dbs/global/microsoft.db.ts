@@ -7,12 +7,17 @@ import {
 } from '../../entities/querys/query';
 import { Having, IJoin, Join } from '../../entities/querys/find.query';
 
+import { Field } from '../../migration/field';
 import GlobalSqlModel from './global.sql';
 import mssql from 'mssql';
 
 export default class GlobalMicrosoftModel extends GlobalSqlModel {
   protected pool: mssql.ConnectionPool | null = null;
   protected transactionConnection: mssql.Transaction | null = null;
+
+  public disconnect = async () => {
+    await this.pool?.close();
+  };
 
   /* Querying */
   public query = async (
@@ -56,26 +61,34 @@ export default class GlobalMicrosoftModel extends GlobalSqlModel {
 
   public select = async (
     tableName: string,
-    distinct: boolean,
-    attributes: AttrAndAlias[],
-    wheres: (WhereAttribute | WhereKeyWord)[],
-    sorts: SortAttribute[],
-    tableAlias: string,
-    limit: number,
+    distinct: boolean = false,
+    attributes: AttrAndAlias[] = [],
+    wheres: (WhereAttribute | WhereKeyWord)[] = [],
+    sorts: SortAttribute[] = [],
+    tableAlias: string = '',
+    limit: number = -1,
     offset = 0,
-    joins: IJoin[],
-    groups: string[],
-    havings: (WhereAttribute | WhereKeyWord)[],
+    joins: IJoin[] = [],
+    groups: string[] = [],
+    havings: (WhereAttribute | WhereKeyWord)[] = [],
   ) => {
     const query = `SELECT${distinct ? ' DISTINCT' : ''}${this.computeAttributes(
       attributes,
-    )} FROM \`${tableName}\` AS ${tableAlias} ${this.computeJoins(
-      joins,
-    )}${this.computeWhere(wheres, '@', true)}${this.computeGroupBy(
-      groups,
-    )}${this.computeWhere(havings, '?', false, 'HAVING')}${this.computeSort(
-      sorts,
-    )}${
+      '`',
+    )} FROM \`${tableName}\` ${
+      tableAlias ? `AS ${tableAlias}` : ''
+    } ${this.computeJoins(joins, '`', 'AS')}${this.computeWhere(
+      wheres,
+      '@',
+      true,
+      '`',
+    )}${this.computeGroupBy(groups)}${this.computeWhere(
+      havings,
+      '?',
+      false,
+      '`',
+      'HAVING',
+    )}${this.computeSort(sorts, '`')}${
       limit !== -1
         ? ` OFFSET ${offset} ROWS FETCH NEXT ${offset} ROWS ONLY`
         : ''
@@ -97,6 +110,7 @@ export default class GlobalMicrosoftModel extends GlobalSqlModel {
       wheres,
       '@',
       true,
+      '`',
     )}`;
     return (
       await this.query(
@@ -114,9 +128,44 @@ export default class GlobalMicrosoftModel extends GlobalSqlModel {
       wheres,
       '@',
       true,
+      '`',
     )}`;
     return (await this.query(query, this.getWhereAttributes(wheres)))
       ?.rowsAffected.length;
+  };
+
+  /* Table management */
+  public createTable = async (tableName: string, fields: Field[]) => {
+    const query = `CREATE TABLE ${tableName} (${fields
+      .map((f: Field) => this.formatFieldForTableManagement(f))
+      .join(', ')})`;
+    // TODO add constraints
+    return await this.query(query);
+  };
+
+  public removeTable = async (tableName: string) => {
+    const query = `DROP TABLE ${tableName}`;
+    return await this.query(query);
+  };
+
+  public alterTable = async (
+    tableName: string,
+    fieldsToAdd: Field[],
+    fieldsToRemove: string[],
+  ) => {
+    await fieldsToRemove.reduce(async (prev, cur) => {
+      await prev;
+      const query = `ALTER TABLE ${tableName} DROP COLUMN ${cur}`;
+      await this.query(query);
+    }, Promise.resolve());
+    await fieldsToAdd.reduce(async (prev, cur) => {
+      await prev;
+      const query = `ALTER TABLE ${tableName} ADD ${this.formatFieldForTableManagement(
+        cur,
+      )}`;
+      // TODO add constraints
+      await this.query(query);
+    }, Promise.resolve());
   };
 
   /* Transaction */
@@ -164,11 +213,36 @@ export default class GlobalMicrosoftModel extends GlobalSqlModel {
     }
   };
 
+  /* Migration management */
+  public checkMigrationTable = async () => {
+    const res = await this.query(
+      'SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = "migration"',
+    );
+    return res && res.output ? true : false;
+  };
+
   public setPool = async (config: mssql.config) => {
     const p = await getPool(config);
     if (p) {
       this.pool = p;
     }
+  };
+
+  private formatFieldForTableManagement = (field: Field) => {
+    const fInfos = field.getAll();
+    return `\`${fInfos.name}\` ${fInfos.type}${
+      fInfos.len !== 0 ? `(${fInfos.len})` : ''
+    }${fInfos.null ? '' : ' NOT NULL'}${
+      fInfos.mustBeUnique || fInfos.primaryKey ? ' UNIQUE' : ''
+    }${fInfos.ai ? ' AUTO_INCREMENT' : ''}${
+      fInfos.defaultValue
+        ? ` DEFAULT ${
+            fInfos.defaultValue.isSystem
+              ? `${fInfos.defaultValue.value}()`
+              : `'${fInfos.defaultValue.value}'`
+          }`
+        : ''
+    }${fInfos.checkValue ? ` CHECK (${fInfos.name}${fInfos.checkValue})` : ''}`;
   };
 }
 

@@ -1,4 +1,4 @@
-var config = {
+let config = {
     collectCoverage: true,
     transform: {
         '^.+\\.ts$': 'ts-jest',
@@ -18,6 +18,7 @@ var config = {
         '!<rootDir>/**/_tests/**',
     ],
     cacheDirectory: '<rootDir>/_tests/_cache/',
+    preset: '',
 };
 
 module.exports = config;

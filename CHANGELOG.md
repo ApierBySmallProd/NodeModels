@@ -1,5 +1,15 @@
 # Changelog
 
+## V4.5.0
+
+### ADD
+
+- Link entity to a specific database connection
+- New decorator for a field named @Field which regroup every other ones to be more clear and have less decorators on our code
+- Tests for the most part of the library
+
+---
+
 ## V4.4.11
 
 ### FIX

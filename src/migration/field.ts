@@ -9,7 +9,8 @@ export class Field {
   private mustBeUnique = false;
   private defaultValue: DefaultValue | null = null;
   private checkValue: string | null = null;
-  constructor(name: string, type: FieldType) {
+
+  public constructor(name: string, type: FieldType) {
     this.name = name;
     this.type = type;
   }
@@ -51,8 +52,8 @@ export class Field {
     return this;
   };
 
-  public default = (defaultValue: string, systemFunction = false) => {
-    this.defaultValue = { value: defaultValue, isSystem: systemFunction };
+  public default = (defaultValue: string, system = false) => {
+    this.defaultValue = { value: defaultValue, isSystem: system };
     return this;
   };
 
@@ -67,25 +68,12 @@ export class Field {
     null: this.null,
     len: this.len,
     ai: this.ai,
-    foreign: this.foreignKey,
-    primary: this.primaryKey,
+    foreignKey: this.foreignKey,
+    primaryKey: this.primaryKey,
+    mustBeUnique: this.mustBeUnique,
+    defaultValue: this.defaultValue,
+    checkValue: this.checkValue,
   });
-
-  public formatField = () => {
-    return `\`${this.name}\` ${this.type}${
-      this.len !== 0 ? `(${this.len})` : ''
-    }${this.null ? '' : ' NOT NULL'}${
-      this.mustBeUnique || this.primaryKey ? ' UNIQUE' : ''
-    }${this.ai ? ' AUTO_INCREMENT' : ''}${
-      this.defaultValue
-        ? ` DEFAULT ${
-            this.defaultValue.isSystem
-              ? `${this.defaultValue.value}()`
-              : `'${this.defaultValue.value}'`
-          }`
-        : ''
-    }${this.checkValue ? ` CHECK (${this.name}${this.checkValue})` : ''}`;
-  };
 
   public equal = (field: Field) => {
     return (
@@ -99,28 +87,6 @@ export class Field {
       field.checkValue === this.checkValue &&
       this.defaultValueEquals(field)
     );
-  };
-
-  public formatConstraint = (tableName: string) => {
-    const constraints = [];
-    // Maybe put this again later
-    /*
-    if (this.primaryKey) {
-      constraints.push(
-        `ALTER TABLE \`${tableName}\` ADD CONSTRAINT \`pk_${tableName.toLowerCase()}_${this.name.toLowerCase()}\` PRIMARY KEY (\`${
-          this.name
-        }\`)`,
-      );
-    }
-    */
-    if (this.foreignKey) {
-      constraints.push(
-        `ALTER TABLE \`${tableName}\` ADD CONSTRAINT fk_${tableName.toLowerCase()}_${this.name.toLowerCase()} FOREIGN KEY (${
-          this.name
-        }) REFERENCES ${this.foreignKey.table}(\`${this.foreignKey.column}\`)`,
-      );
-    }
-    return constraints;
   };
 
   public generateMigrationFile = (): string => {
@@ -175,7 +141,6 @@ export type FieldType =
   | 'time'
   | 'datetime'
   | 'timestamp'
-  | 'year'
   | 'char'
   | 'varchar'
   | 'binary'
@@ -187,6 +152,4 @@ export type FieldType =
   | 'tinytext'
   | 'text'
   | 'mediumtext'
-  | 'longtext'
-  | 'enum'
-  | 'set';
+  | 'longtext';

@@ -12,18 +12,23 @@ export interface Config {
 export default class MigrationManager {
   private config: Config;
 
-  constructor() {
-    this.config = DbManager.get().getConfig();
+  public constructor() {
+    this.config = DbManager.getInstance().getConfig();
+    MigrationEntity.reset();
   }
 
   /**
    * Make all migrations or given targetMigration
    * (call the up function of every migration)
    */
-  public migrate = async (targetMigration?: string, dbName?: string) => {
+  public migrate = async (
+    targetMigration?: string,
+    dbName?: string,
+    silent?: boolean,
+  ) => {
     await EntityManager.initialize();
-    console.log('\x1b[33mStarting migrations\x1b[0m');
-    const model = DbManager.get().get(dbName);
+    if (!silent) console.log('\x1b[33mStarting migrations\x1b[0m');
+    const model = DbManager.getInstance().get(dbName);
     if (!model) {
       throw new Error('Database not found');
     }
@@ -44,9 +49,10 @@ export default class MigrationManager {
         (!targetMigration || targetMigration === migrationRequired.name)
       ) {
         const migration = new Migration(migrationRequired.name, 'up');
-        console.log(`\x1b[35m## Migrating ${migrationRequired.name}\x1b[0m`);
+        if (!silent)
+          console.log(`\x1b[35m## Migrating ${migrationRequired.name}\x1b[0m`);
         migrationRequired.up(migration);
-        await migration.execute(model);
+        await migration.execute(model, silent);
       }
     }, Promise.resolve());
   };
@@ -55,10 +61,14 @@ export default class MigrationManager {
    * Reset all migrations or given targetMigration
    * (call the down function of every migrations)
    */
-  public reset = async (targetMigration?: string, dbName?: string) => {
+  public reset = async (
+    targetMigration?: string,
+    dbName?: string,
+    silent?: boolean,
+  ) => {
     await EntityManager.initialize();
-    console.log('\x1b[33mStarting migrations\x1b[0m');
-    const model = DbManager.get().get(dbName);
+    if (!silent) console.log('\x1b[33mStarting migrations\x1b[0m');
+    const model = DbManager.getInstance().get(dbName);
     if (!model) {
       throw new Error('Database not found');
     }
@@ -84,10 +94,11 @@ export default class MigrationManager {
         }
       });
       if (migrationRequired) {
-        console.log(`\x1b[35m## Migrating ${migrationRequired.name}\x1b[0m`);
+        if (!silent)
+          console.log(`\x1b[35m## Migrating ${migrationRequired.name}\x1b[0m`);
         const migration = new Migration(migrationRequired.name, 'down');
         migrationRequired.down(migration);
-        await migration.execute(model);
+        await migration.execute(model, silent);
       }
     }, Promise.resolve());
   };

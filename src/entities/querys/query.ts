@@ -1,7 +1,10 @@
 export default abstract class Query {
   protected tableName: string;
-  constructor(tableName: string) {
+  protected dbName?: string;
+
+  public constructor(tableName: string, dbName?: string) {
     this.tableName = tableName;
+    this.dbName = dbName;
   }
 }
 
@@ -25,8 +28,8 @@ export interface SortAttribute {
 
 export interface AttrAndAlias {
   attribute: string;
-  alias: string;
-  function: AttributeFunction | null;
+  alias?: string;
+  function?: AttributeFunction | null;
 }
 
 export type WhereOperator =

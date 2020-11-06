@@ -20,7 +20,9 @@ export default class UpdateQuery extends WhereQuery {
    * Execute the update query and return the number of updated rows
    */
   public exec = async (dbName: string | null = null) => {
-    const db = DbManager.get().get(dbName);
+    let dbConnName = dbName;
+    if (!dbConnName && this.dbName) dbConnName = this.dbName;
+    const db = DbManager.getInstance().get(dbConnName);
     if (!db) throw Error('Database not found');
     return await db.update(this.tableName, this.attributes, this.wheres);
   };

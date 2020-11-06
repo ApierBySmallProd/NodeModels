@@ -14,7 +14,9 @@ export default class CreateQuery extends Query {
    * Execute the create query and return the inserted id
    */
   public exec = async (dbName: string | null = null) => {
-    const db = DbManager.get().get(dbName);
+    let dbConnName = dbName;
+    if (!dbConnName && this.dbName) dbConnName = this.dbName;
+    const db = DbManager.getInstance().get(dbConnName);
     if (!db) throw Error('Database not found');
     return await db.insert(this.tableName, this.attributes);
   };

@@ -1,19 +1,21 @@
 {
   "compilerOptions": {
-    "target": "es6",
-    "module": "commonjs",
-    "declaration": true,
     "outDir": "./dist",
-    "strict": true,
+    "sourceMap": false,
     "noImplicitAny": true,
+    "module": "commonjs",
     "removeComments": true,
     "esModuleInterop": true,
     "moduleResolution": "node",
     "preserveConstEnums": true,
+    "target": "es2017",
     "allowJs": false,
     "strictNullChecks": true,
-    "experimentalDecorators": true
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "lib": ["dom", "es7", "es2017"],
+    "types": ["jest", "node"]
   },
-  "include": ["./src/**/*"],
-  "exclude": ["./node_modules/**/*.*"]
+  "include": ["./src"],
+  "exclude": ["./node_modules", "./dist"]
 }

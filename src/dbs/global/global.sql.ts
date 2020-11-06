@@ -13,19 +13,31 @@ export default abstract class GlobalSqlModel extends GlobalModel {
     const newWheres: WhereAttribute[] = wheres.filter((w) =>
       this.isWhereAttribute(w),
     );
-    return newWheres.map((w) => w.value);
+    return newWheres.reduce((prev: string[], cur: WhereAttribute) => {
+      if (cur.value instanceof Array) {
+        cur.value.forEach((value) => {
+          prev.push(value);
+        });
+      } else {
+        prev.push(cur.value);
+      }
+      return prev;
+    }, []);
   };
 
-  protected computeAttributes = (attributes: AttrAndAlias[]) => {
+  protected computeAttributes = (
+    attributes: AttrAndAlias[],
+    escaper: string,
+  ) => {
     if (!attributes.length) return ' *';
     const query = attributes.map(
       (a) =>
         `${
           a.function
-            ? `${this.computeAttributeFunction(a)}(\`${a.attribute}\`)${
+            ? `${this.computeAttributeFunction(a)}(${a.attribute})${
                 a.alias ? ` AS ${a.alias}` : ''
               }`
-            : `\`${a.attribute}\`${a.alias ? ` AS ${a.alias}` : ''}`
+            : `${a.attribute}${a.alias ? ` AS ${a.alias}` : ''}`
         }`,
     );
     return ` ${query}`;
@@ -35,18 +47,20 @@ export default abstract class GlobalSqlModel extends GlobalModel {
     wheres: (WhereAttribute | WhereKeyWord)[],
     keyword: string,
     number: boolean,
+    escaper: string,
     name: string = 'WHERE',
+    fromNumber: number = 0,
   ) => {
     let where = wheres.length ? ` ${name} ` : '';
     const alias = {
       keyword,
       number,
-      nb: 0,
+      nb: fromNumber,
     };
     wheres.forEach((w) => {
       if (this.isWhereAttribute(w)) {
         w = w as WhereAttribute;
-        where = `${where} ${this.computeWhereAttribute(w, alias)}`;
+        where = `${where} ${this.computeWhereAttribute(w, alias, escaper)}`;
       } else {
         w = w as WhereKeyWord;
         where = `${where} ${this.computeWhereKeyWord(w)}`;
@@ -55,12 +69,16 @@ export default abstract class GlobalSqlModel extends GlobalModel {
     return where;
   };
 
-  protected computeJoins = (joins: IJoin[]) => {
+  protected computeJoins = (
+    joins: IJoin[],
+    escaper: string,
+    aliasKeyword: string,
+  ) => {
     let join = '';
     joins.forEach((j) => {
-      join = `${join}${this.getJoinType(j)} \`${j.tableName}\` AS ${
-        j.alias
-      }${this.computeJoinWheres(j.wheres)} `;
+      join = `${join}${this.getJoinType(j)} ${escaper}${j.tableName}${escaper}${
+        aliasKeyword ? ` ${aliasKeyword}` : ''
+      } ${j.alias}${this.computeJoinWheres(j.wheres)} `;
     });
     return join;
   };
@@ -70,9 +88,11 @@ export default abstract class GlobalSqlModel extends GlobalModel {
     return group;
   };
 
-  protected computeSort = (sorts: SortAttribute[]) => {
+  protected computeSort = (sorts: SortAttribute[], escaper: string) => {
     const sortsString = sorts
-      .map((s) => `\`${s.attribute}\` ${this.computeSortMode(s)}`)
+      .map(
+        (s) => `${escaper}${s.attribute}${escaper} ${this.computeSortMode(s)}`,
+      )
       .join(', ');
     return sorts.length ? ` ORDER BY ${sortsString}` : '';
   };
@@ -93,8 +113,6 @@ export default abstract class GlobalSqlModel extends GlobalModel {
 
   private getJoinType = (join: IJoin) => {
     switch (join.method) {
-      case 'full':
-        return 'FULL JOIN';
       case 'inner':
         return 'INNER JOIN';
       case 'left':
@@ -147,52 +165,56 @@ export default abstract class GlobalSqlModel extends GlobalModel {
     return 'operator' in where;
   };
 
-  private computeWhereAttribute = (attribute: WhereAttribute, alias: any) => {
+  private computeWhereAttribute = (
+    attribute: WhereAttribute,
+    alias: any,
+    escaper: string,
+  ) => {
     switch (attribute.operator) {
       case '<': {
         alias.nb += 1;
-        return `\`${attribute.column}\` < ${alias.keyword}${
+        return `${attribute.column} < ${alias.keyword}${
           alias.number ? alias.nb : ''
         }`;
       }
       case '<=': {
         alias.nb += 1;
-        return `\`${attribute.column}\` <= ${alias.keyword}${
+        return `${attribute.column} <= ${alias.keyword}${
           alias.number ? alias.nb : ''
         }`;
       }
       case '<>': {
         alias.nb += 1;
-        return `\`${attribute.column}\` <> ${alias.keyword}${
+        return `${attribute.column} <> ${alias.keyword}${
           alias.number ? alias.nb : ''
         }`;
       }
       case '=': {
         alias.nb += 1;
-        return `\`${attribute.column}\` = ${alias.keyword}${
+        return `${attribute.column} = ${alias.keyword}${
           alias.number ? alias.nb : ''
         }`;
       }
       case '>': {
         alias.nb += 1;
-        return `\`${attribute.column}\` > ${alias.keyword}${
+        return `${attribute.column} > ${alias.keyword}${
           alias.number ? alias.nb : ''
         }`;
       }
       case '>=': {
         alias.nb += 1;
-        return `\`${attribute.column}\` >= ${alias.keyword}${
+        return `${attribute.column} >= ${alias.keyword}${
           alias.number ? alias.nb : ''
         }`;
       }
       case 'BETWEEN': {
-        alias.nb += 2;
-        return `\`${attribute.column}\` BETWEEN ${alias.keyword}${
+        alias.nb += 1;
+        return `${attribute.column} BETWEEN ${alias.keyword}${
           alias.number ? alias.nb : ''
-        } AND ${alias.keyword}${alias.number ? alias.nb : ''}`;
+        } AND ${alias.keyword}${alias.number ? ++alias.nb : ''}`;
       }
       case 'IN': {
-        return `\`${attribute.column}\` IN (${attribute.value
+        return `${attribute.column} IN (${attribute.value
           .map(() => {
             alias.nb += 1;
             return `${alias.keyword}${alias.number ? alias.nb : ''}`;
@@ -201,7 +223,7 @@ export default abstract class GlobalSqlModel extends GlobalModel {
       }
       case 'LIKE': {
         alias.nb += 1;
-        return `\`${attribute.column}\` LIKE ${alias.keyword}${
+        return `${attribute.column} LIKE ${alias.keyword}${
           alias.number ? alias.nb : ''
         }`;
       }

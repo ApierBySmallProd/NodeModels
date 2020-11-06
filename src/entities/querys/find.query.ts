@@ -23,9 +23,14 @@ export default class FindQuery extends WhereQuery {
   private groups: string[] = [];
   private havings: Having | null = null;
 
-  constructor(tableName: string, afterExec?: (res: any[]) => any) {
-    super(tableName);
+  public constructor(
+    tableName: string,
+    afterExec?: (res: any[]) => any,
+    dbName?: string,
+  ) {
+    super(tableName, dbName);
     this.afterExec = afterExec;
+    this.dbName = dbName;
   }
 
   public where = (column: string, operator: WhereOperator, value: any) => {
@@ -91,7 +96,9 @@ export default class FindQuery extends WhereQuery {
    * Execute the find query and return found rows
    */
   public exec = async (dbName: string | null = null) => {
-    const db = DbManager.get().get(dbName);
+    let dbConnName = dbName;
+    if (!dbConnName && this.dbName) dbConnName = this.dbName;
+    const db = DbManager.getInstance().get(dbConnName);
     if (!db) throw Error('Database not found');
     const res = await db.select(
       this.tableName,
@@ -115,10 +122,10 @@ export default class FindQuery extends WhereQuery {
 
 export class Join extends WhereQuery {
   public alias: string;
-  public method: 'inner' | 'left' | 'right' | 'full' = 'inner';
+  public method: 'inner' | 'left' | 'right' = 'inner';
   private query: FindQuery;
 
-  constructor(tableName: string, alias: string, query: FindQuery) {
+  public constructor(tableName: string, alias: string, query: FindQuery) {
     super(tableName);
     this.alias = alias;
     this.query = query;
@@ -143,11 +150,6 @@ export class Join extends WhereQuery {
     return this;
   };
 
-  public full = () => {
-    this.method = 'full';
-    return this;
-  };
-
   public getInterface = (): IJoin => ({
     alias: this.alias,
     tableName: this.tableName,
@@ -159,13 +161,13 @@ export class Join extends WhereQuery {
 export interface IJoin {
   alias: string;
   tableName: string;
-  method: 'inner' | 'left' | 'right' | 'full';
+  method: 'inner' | 'left' | 'right';
   wheres: (WhereAttribute | WhereKeyWord)[];
 }
 
 export class Having extends WhereQuery {
   private query: FindQuery;
-  constructor(query: FindQuery) {
+  public constructor(query: FindQuery) {
     super('');
     this.query = query;
   }

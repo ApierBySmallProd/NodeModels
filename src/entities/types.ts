@@ -1,7 +1,9 @@
+export type RelationshipType = 'manytomany' | 'manytoone' | 'onetomany';
 export interface Relationship {
   entity: any;
-  type: 'manytomany' | 'manytoone' | 'onetomany';
+  type: RelationshipType;
   data: any;
   fieldName: string;
   autoFetch: boolean;
+  relationTable?: string;
 }

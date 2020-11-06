@@ -10,7 +10,7 @@
 - ~~Groupby, Having~~
 - Refresh entity (hard)
 - Fix remove field error on constraint (very hard)
-- Link entity to specific database (hard)
+- ~~Link entity to specific database (hard)~~
 - Remove row on seedtable (easy)
 - Better migration process (hard)
 - ~~Set field name~~

@@ -13,7 +13,7 @@ export default class FieldEntity {
   public foreignKey: ForeignKey | null = null;
   public fieldLength = 0;
 
-  constructor(key: string, type: FieldType) {
+  public constructor(key: string, type: FieldType) {
     this.key = key;
     this.type = type;
     this.fieldName = key;
