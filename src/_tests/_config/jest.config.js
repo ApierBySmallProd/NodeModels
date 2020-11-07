@@ -6,7 +6,7 @@ let config = {
     moduleFileExtensions: ['ts', 'js'],
     coverageThreshold: {
         global: {
-            lines: 80,
+            lines: 70,
         },
     },
     rootDir: '../../',
